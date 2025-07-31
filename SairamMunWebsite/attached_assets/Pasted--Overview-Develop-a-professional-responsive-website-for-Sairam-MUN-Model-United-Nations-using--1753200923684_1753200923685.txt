@@ -1,0 +1,149 @@
+📌 Overview:
+Develop a professional, responsive website for Sairam MUN (Model United Nations) using React.js with smooth animations, dark theme, and seamless full-page transitions. The site should support desktop and mobile views equally, leveraging modern JS libraries for UI effects, page transitions, and form handling.
+
+✅ Features & Functional Requirements:
+🔹 1. Home Page
+Navbar:
+
+Left: Sairam Logo (clickable, navigates to Home)
+
+Center: Sairam MUN
+
+Right Menu Items: Home | About | Brochure | Register Now
+
+Sticky, responsive navbar
+
+Hero Section:
+
+Central heading: Sairam MUN
+
+Sub-slogan: "Speak. Lead. Resolve."
+
+Venue: Sri Sairam Engineering College
+
+Date: Date: August 20-21, 2025
+
+Button: Register Now (scrolls or navigates to registration page)
+
+Timer below button: "Registration Ends In: [Live Countdown Timer]"
+
+Card Carousel Section (with horizontal sliding carousel):
+
+Card 1: "🍱 Lunch and Snacks will be Provided"
+
+Card 2: "📜 Certificates for All Participants"
+
+Card 3: "🌍 Speak as a Country Representative"
+
+Card 4: "🧠 Enhance Diplomacy and Public Speaking Skills"
+
+Carousel auto-slides, swipeable on mobile
+
+🔹 2. About Page
+Layout:
+
+Left: Description of MUN at Sairam — how it helps students, objectives, relevance, global exposure.
+
+Right: MUN-related image (professional, high-quality)
+
+Stats Section (horizontal box layout):
+
+Box 1: Delegates: 2000+
+
+Box 2: Committees: 23
+
+Box 3: Partners: 12
+
+Paragraph:
+
+About the current edition of Sairam MUN: scale, expectations, how to participate, and benefits.
+
+🔹 3. Brochure
+On clicking "Brochure" in navbar:
+
+Opens a downloadable PDF in new tab (Brochure should be hosted in /assets/brochure.pdf)
+
+🔹 4. Register Page
+Registration Form Fields:
+
+Full Name (Text)
+
+Year (Dropdown: I, II, III, IV)
+
+Department (Dropdown or Text)
+
+Section (Text)
+
+SEC ID (Text)
+
+College (Text)
+
+Preferred Country (Text or Dropdown)
+
+Payment Option (Button or redirect to payment gateway)
+
+All fields should have validation.
+
+Form submission confirmation message or redirect to Thank You page.
+
+Optionally, store or log data to Google Sheets / Firebase / Backend API.
+
+Add a Pay Now button (can integrate with Razorpay, Stripe, or placeholder for future).
+
+🎨 UI/UX Requirements:
+Dark Theme Toggle (default: dark mode)
+
+Minimal Animations:
+
+Fade-ins
+
+Slide transitions
+
+Button hover effects
+
+Full-Page Transitions:
+
+Each page (Home, About, Register) should have its own transition style using Framer Motion, GSAP, or React Transition Group.
+
+Smooth Scrolling for navigation within page.
+
+Mobile Responsiveness:
+
+Fully responsive layout for phones and tablets.
+
+Touch-friendly carousel, collapsible navbar for smaller screens.
+
+🛠️ Tech Stack & Libraries:
+React.js with Vite or Create React App
+
+React Router DOM (for SPA routing)
+
+Framer Motion / GSAP (for page transitions)
+
+Tailwind CSS or Styled Components (for styling)
+
+React Icons (for icons like calendar, location)
+
+React Hook Form / Formik (for form management)
+
+PDF Viewer / External Link (to open Brochure)
+
+Countdown Timer – Vanilla JS or library (react-countdown)
+
+Carousel – react-slick or Swiper.js
+
+🔄 Navigation Behavior:
+All pages (Home, About, Register) must have:
+
+Full-page animated transitions
+
+Scroll restoration and fade effect when navigating back
+
+Dynamic title update
+
+🌙 Dark Mode:
+Dark mode enabled by default
+
+Provide toggle at the top right or in footer
+
+Persist theme using localStorage
