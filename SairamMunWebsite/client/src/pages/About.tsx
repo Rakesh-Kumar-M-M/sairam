@@ -1,4 +1,5 @@
 import { motion } from "framer-motion";
+import useEmblaCarousel from "embla-carousel-react"; // Add this import
 
 interface StatCardProps {
   number: string;
@@ -17,6 +18,30 @@ function StatCard({ number, label, description, color }: StatCardProps) {
       <div className="text-xl text-white font-semibold">{label}</div>
       <div className="text-slate-400 mt-2">{description}</div>
     </motion.div>
+  );
+}
+
+// Carousel images array
+const carouselImages = [
+  "https://images.unsplash.com/photo-1552664730-d307ca884978?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=800&h=600",
+  "https://images.unsplash.com/photo-1464983953574-0892a716854b?auto=format&fit=crop&w=800&q=80",
+  "https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=800&q=80"
+  // Add more image URLs as needed
+];
+
+function AboutCarousel() {
+  const [emblaRef] = useEmblaCarousel();
+
+  return (
+    <div className="embla overflow-hidden rounded-2xl shadow-2xl w-full h-auto" ref={emblaRef}>
+      <div className="embla__container flex">
+        {carouselImages.map((src, idx) => (
+          <div className="embla__slide flex-[0_0_100%] px-2" key={idx}>
+            <img src={src} alt={`About ${idx + 1}`} className="w-full h-80 object-cover rounded-2xl" />
+          </div>
+        ))}
+      </div>
+    </div>
   );
 }
 
@@ -58,11 +83,8 @@ export default function About() {
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.8, delay: 0.2 }}
           >
-            <img
-              src="https://images.unsplash.com/photo-1552664730-d307ca884978?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=800&h=600"
-              alt="Model UN conference session"
-              className="rounded-2xl shadow-2xl w-full h-auto"
-            />
+            {/* Carousel replaces static image */}
+            <AboutCarousel />
           </motion.div>
         </div>
 
