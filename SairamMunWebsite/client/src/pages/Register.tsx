@@ -242,7 +242,7 @@ export default function Register() {
                   <CardContent>
                     <div className="flex items-center justify-between mb-4">
                       <span className="text-slate-300">Conference Registration</span>
-                      <span className="text-2xl font-bold text-yellow-500">₹500</span>
+                      <span className="text-2xl font-bold text-yellow-500">₹300</span>
                     </div>
                     <Button
                       type="button"
@@ -250,7 +250,7 @@ export default function Register() {
                       className="w-full bg-gradient-to-r from-yellow-500 to-blue-600 hover:from-yellow-600 hover:to-blue-700 text-white font-semibold"
                     >
                       <CreditCard className="mr-2" size={20} />
-                      Pay Now - ₹500
+                      Pay Now - ₹300
                     </Button>
                   </CardContent>
                 </Card>
