@@ -42,11 +42,11 @@ export default function Home() {
           <div className="space-y-2 mb-8 text-slate-300">
             <p className="text-lg flex items-center justify-center gap-2">
               <MapPin className="text-yellow-500" size={20} />
-              Sri Sairam Engineering College
+              Sri Sairam Institutions
             </p>
             <p className="text-lg flex items-center justify-center gap-2">
               <Calendar className="text-yellow-500" size={20} />
-              August 20-21, 2025
+              September 2-3, 2025
             </p>
           </div>
           
