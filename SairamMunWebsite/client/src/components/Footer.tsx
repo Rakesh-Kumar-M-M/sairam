@@ -71,15 +71,15 @@ export function Footer() {
               <div className="flex items-center space-x-3">
                 <Phone size={18} className="text-yellow-500" />
                 <div>
-                  <p className="text-slate-300 font-medium">Harini M</p>
-                  <p className="text-slate-400">+91 81234 56789</p>
+                  <p className="text-slate-300 font-medium">Sushil Gopinath</p>
+                  <p className="text-slate-400">+91 7845600485</p>
                 </div>
               </div>
               <div className="flex items-center space-x-3">
                 <Phone size={18} className="text-yellow-500" />
                 <div>
-                  <p className="text-slate-300 font-medium">Koundar B</p>
-                  <p className="text-slate-400">+91 89765 43210</p>
+                  <p className="text-slate-300 font-medium">Arvind</p>
+                  <p className="text-slate-400">+91 0000000000</p>
                 </div>
               </div>
             </div>
