@@ -21,30 +21,36 @@ export function Footer() {
           {/* Left Section */}
           <div className="space-y-4">
             <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-purple-600 rounded-lg flex items-center justify-center">
-                <span className="text-white font-bold text-lg">S</span>
-              </div>
+              <img
+                src="/assets/munlogo.png"
+                alt="Sairam MUN Logo"
+                className="h-10 w-auto object-contain"
+              />
               <span className="text-xl font-bold text-white">Sairam MUN</span>
             </div>
             <p className="text-slate-400 italic">"Empowering Voices, Shaping Futures"</p>
             
-            {/* Social Media Icons */}
-            <div className="flex space-x-4 pt-4">
-              <a
-                href="#"
-                className="text-slate-400 hover:text-white transition-colors duration-200"
-                aria-label="Instagram"
-              >
-                <Instagram size={24} />
-              </a>
-              <a
-                href="#"
-                className="text-slate-400 hover:text-white transition-colors duration-200"
-                aria-label="LinkedIn"
-              >
-                <Linkedin size={24} />
-              </a>
-            </div>
+                         {/* Social Media Icons */}
+             <div className="flex space-x-4 pt-4">
+               <a
+                 href="https://www.instagram.com/sairaminstitutions?igsh=bTIxazR5YmJoY3g3"
+                 target="_blank"
+                 rel="noopener noreferrer"
+                 className="text-slate-400 hover:text-white transition-colors duration-200"
+                 aria-label="Instagram"
+               >
+                 <Instagram size={24} />
+               </a>
+               <a
+                 href="https://www.linkedin.com/company/sairaminstitutions/"
+                 target="_blank"
+                 rel="noopener noreferrer"
+                 className="text-slate-400 hover:text-white transition-colors duration-200"
+                 aria-label="LinkedIn"
+               >
+                 <Linkedin size={24} />
+               </a>
+             </div>
           </div>
           
           {/* Center Section: Quick Links */}
@@ -73,13 +79,6 @@ export function Footer() {
                 <div>
                   <p className="text-slate-300 font-medium">Sushil Gopinath</p>
                   <p className="text-slate-400">+91 7845600485</p>
-                </div>
-              </div>
-              <div className="flex items-center space-x-3">
-                <Phone size={18} className="text-yellow-500" />
-                <div>
-                  <p className="text-slate-300 font-medium">Arvind</p>
-                  <p className="text-slate-400">+91 0000000000</p>
                 </div>
               </div>
             </div>
