@@ -15,7 +15,7 @@ export default function Home() {
       className="min-h-screen"
     >
       {/* Hero Section */}
-      <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
+      <section className="relative min-h-screen flex items-center justify-center overflow-hidden -mt-16">
         {/* Background with overlay */}
         <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
           <div 
@@ -33,7 +33,24 @@ export default function Home() {
           transition={{ duration: 0.8, delay: 0.2 }}
           className="relative z-10 text-center px-4 max-w-6xl mx-auto"
         >
-          <h1 className="text-5xl md:text-7xl font-bold mb-6 bg-gradient-to-r from-white via-slate-200 to-slate-400 bg-clip-text text-transparent">
+          {/* Sairam MUN Logo */}
+          <motion.div
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.6, delay: 0.1 }}
+            className="mb-3 mt-8 flex justify-center"
+          >
+            <img
+              src="/assets/munlogo.png"
+              alt="Sairam MUN Logo"
+              className="w-32 h-32 md:w-40 md:h-40 object-contain drop-shadow-2xl"
+              style={{
+                filter: 'drop-shadow(0 10px 20px rgba(0, 0, 0, 0.3))'
+              }}
+            />
+          </motion.div>
+          
+          <h1 className="text-5xl md:text-7xl font-bold mb-6 bg-gradient-to-r from-white via-slate-200 to-slate-400 bg-clip-text text-transparent -mt-4">
             Sairam MUN
           </h1>
           <p className="text-2xl md:text-3xl font-medium text-yellow-500 mb-4">
