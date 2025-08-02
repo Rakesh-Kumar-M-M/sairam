@@ -123,9 +123,9 @@ export default function Register() {
                 {/* Personal Information */}
                 <div className="grid md:grid-cols-2 gap-6">
                   <div className="space-y-2">
-                    <Label htmlFor="fullName" className="text-slate-300 font-semibold">
-                      Full Name *
-                    </Label>
+                                         <Label htmlFor="fullName" className="text-slate-300 font-semibold">
+                       Full Name <span className="text-red-500">*</span>
+                     </Label>
                     <Input
                       id="fullName"
                       {...form.register("fullName")}
@@ -137,9 +137,9 @@ export default function Register() {
                     )}
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="year" className="text-slate-300 font-semibold">
-                      Year *
-                    </Label>
+                                         <Label htmlFor="year" className="text-slate-300 font-semibold">
+                       Year <span className="text-red-500">*</span>
+                     </Label>
                     <Select onValueChange={(value) => form.setValue("year", value as "I" | "II" | "III" | "IV")}>
                       <SelectTrigger className="bg-slate-900 border-slate-600 text-white focus:border-blue-500 focus:ring-blue-500">
                         <SelectValue placeholder="Select Year" />
@@ -159,9 +159,9 @@ export default function Register() {
 
                 <div className="grid md:grid-cols-2 gap-6">
                   <div className="space-y-2">
-                    <Label htmlFor="department" className="text-slate-300 font-semibold">
-                      Department *
-                    </Label>
+                                         <Label htmlFor="department" className="text-slate-300 font-semibold">
+                       Department <span className="text-red-500">*</span>
+                     </Label>
                     <Input
                       id="department"
                       {...form.register("department")}
@@ -173,9 +173,9 @@ export default function Register() {
                     )}
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="section" className="text-slate-300 font-semibold">
-                      Section *
-                    </Label>
+                                         <Label htmlFor="section" className="text-slate-300 font-semibold">
+                       Section <span className="text-red-500">*</span>
+                     </Label>
                     <Input
                       id="section"
                       {...form.register("section")}
@@ -190,9 +190,9 @@ export default function Register() {
 
                 <div className="grid md:grid-cols-2 gap-6">
                   <div className="space-y-2">
-                    <Label htmlFor="secId" className="text-slate-300 font-semibold">
-                      SEC ID *
-                    </Label>
+                                         <Label htmlFor="secId" className="text-slate-300 font-semibold">
+                       Student ID <span className="text-red-500">*</span>
+                     </Label>
                     <Input
                       id="secId"
                       {...form.register("secId")}
@@ -204,15 +204,18 @@ export default function Register() {
                     )}
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="college" className="text-slate-300 font-semibold">
-                      College *
-                    </Label>
-                    <Input
-                      id="college"
-                      {...form.register("college")}
-                      placeholder="Your college name"
-                      className="bg-slate-900 border-slate-600 text-white placeholder-slate-400 focus:border-blue-500 focus:ring-blue-500"
-                    />
+                                         <Label htmlFor="college" className="text-slate-300 font-semibold">
+                       College <span className="text-red-500">*</span>
+                     </Label>
+                    <Select onValueChange={(value) => form.setValue("college", value)}>
+                      <SelectTrigger className="bg-slate-900 border-slate-600 text-white focus:border-blue-500 focus:ring-blue-500">
+                        <SelectValue placeholder="Select College" />
+                      </SelectTrigger>
+                      <SelectContent className="bg-slate-800 border-slate-600">
+                        <SelectItem value="Sri Sairam Engineering College">Sri Sairam Engineering College</SelectItem>
+                        <SelectItem value="Sri Sairam Institute of Technology">Sri Sairam Institute of Technology</SelectItem>
+                      </SelectContent>
+                    </Select>
                     {form.formState.errors.college && (
                       <p className="text-red-400 text-sm">{form.formState.errors.college.message}</p>
                     )}
@@ -220,15 +223,24 @@ export default function Register() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="preferredCountry" className="text-slate-300 font-semibold">
-                    Preferred Country *
-                  </Label>
-                  <Input
-                    id="preferredCountry"
-                    {...form.register("preferredCountry")}
-                    placeholder="e.g., United States, India, Germany"
-                    className="bg-slate-900 border-slate-600 text-white placeholder-slate-400 focus:border-blue-500 focus:ring-blue-500"
-                  />
+                                     <Label htmlFor="preferredCountry" className="text-slate-300 font-semibold">
+                     Preferred Country <span className="text-red-500">*</span>
+                   </Label>
+                  <Select onValueChange={(value) => form.setValue("preferredCountry", value)}>
+                    <SelectTrigger className="bg-slate-900 border-slate-600 text-white focus:border-blue-500 focus:ring-blue-500">
+                      <SelectValue placeholder="Select Country" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-slate-800 border-slate-600">
+                      <SelectItem value="India">India</SelectItem>
+                      <SelectItem value="United States">United States</SelectItem>
+                      <SelectItem value="United Kingdom">United Kingdom</SelectItem>
+                      <SelectItem value="Canada">Canada</SelectItem>
+                      <SelectItem value="Germany">Germany</SelectItem>
+                      <SelectItem value="France">France</SelectItem>
+                      <SelectItem value="Australia">Australia</SelectItem>
+                      <SelectItem value="Japan">Japan</SelectItem>
+                    </SelectContent>
+                  </Select>
                   {form.formState.errors.preferredCountry && (
                     <p className="text-red-400 text-sm">{form.formState.errors.preferredCountry.message}</p>
                   )}

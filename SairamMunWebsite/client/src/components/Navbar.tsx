@@ -25,13 +25,11 @@ export function Navbar() {
         <div className="flex justify-between items-center h-16">
           {/* Left: Sairam Institutions Logo */}
           <div className="flex items-center">
-            <div className="w-10 h-10 rounded-full overflow-hidden bg-white flex items-center justify-center">
-              <img
-                src="/assets/sairamlogo.jpg"
-                alt="Sairam Institutions Logo"
-                className="h-8 w-8 object-cover"
-              />
-            </div>
+            <img
+              src="/assets/sairamlogo.jpg"
+              alt="Sairam Institutions Logo"
+              className="h-10 w-auto object-contain"
+            />
           </div>
           
           {/* Center: Navigation Links */}

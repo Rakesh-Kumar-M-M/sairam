@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import useEmblaCarousel from "embla-carousel-react"; // Add this import
+import { useState } from "react";
 
 interface StatCardProps {
   number: string;
@@ -21,26 +21,109 @@ function StatCard({ number, label, description, color }: StatCardProps) {
   );
 }
 
-// Carousel images array
+// Carousel images array using local assets
 const carouselImages = [
-  "https://images.unsplash.com/photo-1552664730-d307ca884978?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=800&h=600",
-  "https://images.unsplash.com/photo-1464983953574-0892a716854b?auto=format&fit=crop&w=800&q=80",
-  "https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=800&q=80"
-  // Add more image URLs as needed
+  "/assets/img1.jpg",
+  "/assets/img2.jpg",
+  "/assets/img3.jpg",
+  "/assets/img4.jpg"
 ];
 
 function AboutCarousel() {
-  const [emblaRef] = useEmblaCarousel();
+  const [currentIndex, setCurrentIndex] = useState(0);
+
+  const nextSlide = () => {
+    setCurrentIndex((prev) => (prev + 1) % carouselImages.length);
+  };
+
+  const prevSlide = () => {
+    setCurrentIndex((prev) => (prev - 1 + carouselImages.length) % carouselImages.length);
+  };
+
+  const goToSlide = (index: number) => {
+    setCurrentIndex(index);
+  };
 
   return (
-    <div className="embla overflow-hidden rounded-2xl shadow-2xl w-full h-auto" ref={emblaRef}>
-      <div className="embla__container flex">
-        {carouselImages.map((src, idx) => (
-          <div className="embla__slide flex-[0_0_100%] px-2" key={idx}>
-            <img src={src} alt={`About ${idx + 1}`} className="w-full h-80 object-cover rounded-2xl" />
-          </div>
-        ))}
+    <div className="relative w-full max-w-md mx-auto">
+      {/* Main Carousel Container */}
+      <div className="relative h-96">
+        {carouselImages.map((imageSrc, index) => {
+          const isActive = index === currentIndex;
+          const isNext = index === (currentIndex + 1) % carouselImages.length;
+          const isPrev = index === (currentIndex - 1 + carouselImages.length) % carouselImages.length;
+          
+          let transformClass = "";
+          let zIndex = "";
+          
+          if (isActive) {
+            transformClass = "translate-x-0 scale-100";
+            zIndex = "z-20";
+          } else if (isNext) {
+            transformClass = "translate-x-8 scale-95";
+            zIndex = "z-10";
+          } else if (isPrev) {
+            transformClass = "-translate-x-8 scale-95";
+            zIndex = "z-10";
+          } else {
+            transformClass = index > currentIndex ? "translate-x-16 scale-90" : "-translate-x-16 scale-90";
+            zIndex = "z-0";
+          }
+
+          return (
+            <motion.div
+              key={index}
+              className={`absolute inset-0 ${zIndex} transition-all duration-500 ease-in-out ${transformClass}`}
+              initial={false}
+            >
+              <div className="bg-gradient-to-br from-indigo-900 to-blue-900 rounded-2xl shadow-2xl overflow-hidden h-full">
+                {/* Image */}
+                <img 
+                  src={imageSrc} 
+                  alt={`Sairam MUN Image ${index + 1}`}
+                  className="w-full h-full object-cover"
+                />
+                
+                {/* Navigation Dots */}
+                <div className="absolute top-4 right-4 flex space-x-1">
+                  {carouselImages.map((_, dotIndex) => (
+                    <button
+                      key={dotIndex}
+                      onClick={() => goToSlide(dotIndex)}
+                      className={`w-2 h-2 rounded-full transition-colors duration-200 ${
+                        dotIndex === currentIndex 
+                          ? 'bg-yellow-400' 
+                          : dotIndex === (currentIndex + 1) % carouselImages.length
+                          ? 'bg-orange-400'
+                          : 'bg-blue-400'
+                      }`}
+                    />
+                  ))}
+                </div>
+              </div>
+            </motion.div>
+          );
+        })}
       </div>
+      
+             {/* Navigation Buttons */}
+       <button
+         onClick={prevSlide}
+         className="absolute -left-12 top-1/2 transform -translate-y-1/2 bg-white/20 hover:bg-white/30 text-white p-3 rounded-full backdrop-blur-md transition-all duration-200 z-30 shadow-lg border border-white/20 hover:border-white/30"
+       >
+         <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M15 19l-7-7 7-7" />
+         </svg>
+       </button>
+       
+       <button
+         onClick={nextSlide}
+         className="absolute -right-12 top-1/2 transform -translate-y-1/2 bg-white/20 hover:bg-white/30 text-white p-3 rounded-full backdrop-blur-md transition-all duration-200 z-30 shadow-lg border border-white/20 hover:border-white/30"
+       >
+         <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M9 5l7 7-7 7" />
+         </svg>
+       </button>
     </div>
   );
 }
@@ -61,6 +144,7 @@ export default function About() {
             initial={{ opacity: 0, x: -50 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.8 }}
+            className="order-2 lg:order-1"
           >
             <h2 className="text-4xl font-bold text-white mb-6">About Sairam MUN</h2>
             <div className="space-y-4 text-slate-300 text-lg leading-relaxed">
@@ -82,8 +166,9 @@ export default function About() {
             initial={{ opacity: 0, x: 50 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.8, delay: 0.2 }}
+            className="order-1 lg:order-2"
           >
-            {/* Carousel replaces static image */}
+            {/* Enhanced Carousel */}
             <AboutCarousel />
           </motion.div>
         </div>
