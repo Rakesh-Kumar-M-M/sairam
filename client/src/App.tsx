@@ -10,6 +10,8 @@ import { Footer } from "@/components/Footer";
 import Home from "@/pages/Home";
 import About from "@/pages/About";
 import Register from "@/pages/Register";
+import Admin from "@/pages/Admin";
+import AdminLogin from "@/pages/AdminLogin";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -22,6 +24,8 @@ function Router() {
             <Route path="/" component={Home} />
             <Route path="/about" component={About} />
             <Route path="/register" component={Register} />
+            <Route path="/admin" component={Admin} />
+            <Route path="/admin-login" component={AdminLogin} />
             <Route component={NotFound} />
           </Switch>
         </AnimatePresence>

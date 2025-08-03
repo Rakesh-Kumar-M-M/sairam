@@ -1,6 +1,6 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
-import { storage } from "./storage";
+import { mongoStorage } from "./mongoStorage";
 import { insertRegistrationSchema } from "@shared/schema";
 import { z } from "zod";
 
@@ -9,12 +9,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/registrations", async (req, res) => {
     try {
       const validatedData = insertRegistrationSchema.parse(req.body);
-      const registration = await storage.createRegistration(validatedData);
+      const registration = await mongoStorage.createRegistration(validatedData);
       res.status(201).json({ 
         success: true, 
         message: "Registration successful",
         registration: {
-          id: registration.id,
+          id: registration._id,
           fullName: registration.fullName,
           createdAt: registration.createdAt
         }
@@ -38,7 +38,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get all registrations (admin endpoint)
   app.get("/api/registrations", async (req, res) => {
     try {
-      const registrations = await storage.getAllRegistrations();
+      const registrations = await mongoStorage.getAllRegistrations();
       res.json({ success: true, registrations });
     } catch (error) {
       res.status(500).json({ 
@@ -51,8 +51,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get registration by ID
   app.get("/api/registrations/:id", async (req, res) => {
     try {
-      const id = parseInt(req.params.id);
-      const registration = await storage.getRegistration(id);
+      const id = req.params.id;
+      const registration = await mongoStorage.getRegistration(id);
       if (!registration) {
         res.status(404).json({ 
           success: false, 
@@ -65,6 +65,123 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ 
         success: false, 
         message: "Failed to fetch registration" 
+      });
+    }
+  });
+
+  // Get registration statistics
+  app.get("/api/registrations/stats", async (req, res) => {
+    try {
+      const stats = await mongoStorage.getRegistrationStats();
+      res.json({ success: true, stats });
+    } catch (error) {
+      res.status(500).json({ 
+        success: false, 
+        message: "Failed to fetch statistics" 
+      });
+    }
+  });
+
+  // Search registrations
+  app.get("/api/registrations/search/:query", async (req, res) => {
+    try {
+      const query = req.params.query;
+      const registrations = await mongoStorage.searchRegistrations(query);
+      res.json({ success: true, registrations });
+    } catch (error) {
+      res.status(500).json({ 
+        success: false, 
+        message: "Failed to search registrations" 
+      });
+    }
+  });
+
+  // Update payment status
+  app.patch("/api/registrations/:id/payment", async (req, res) => {
+    try {
+      const id = req.params.id;
+      const { status } = req.body;
+      
+      if (!['pending', 'completed', 'failed'].includes(status)) {
+        res.status(400).json({ 
+          success: false, 
+          message: "Invalid payment status" 
+        });
+        return;
+      }
+
+      const registration = await mongoStorage.updatePaymentStatus(id, status);
+      if (!registration) {
+        res.status(404).json({ 
+          success: false, 
+          message: "Registration not found" 
+        });
+        return;
+      }
+      
+      res.json({ success: true, registration });
+    } catch (error) {
+      res.status(500).json({ 
+        success: false, 
+        message: "Failed to update payment status" 
+      });
+    }
+  });
+
+  // MongoDB connection status endpoint
+  app.get("/api/health", async (req, res) => {
+    try {
+      const stats = await mongoStorage.getRegistrationStats();
+      res.json({ 
+        success: true, 
+        message: "Server is healthy",
+        mongodb: "connected",
+        stats,
+        timestamp: new Date().toISOString()
+      });
+    } catch (error) {
+      res.status(500).json({ 
+        success: false, 
+        message: "Server health check failed",
+        mongodb: "disconnected",
+        error: error.message
+      });
+    }
+  });
+
+  // Test MongoDB connection endpoint
+  app.get("/api/test-mongodb", async (req, res) => {
+    try {
+      // Test creating a document
+      const testRegistration = await mongoStorage.createRegistration({
+        fullName: "Test Connection",
+        year: "I",
+        department: "Test Department",
+        section: "T",
+        secId: "TEST123",
+        college: "Test College",
+        preferredCountry: "Test Country",
+        phoneNumber: "1234567890"
+      });
+
+      // Test reading documents
+      const allRegistrations = await mongoStorage.getAllRegistrations();
+      
+      // Test deleting the test document
+      await mongoStorage.deleteRegistration(testRegistration._id.toString());
+
+      res.json({
+        success: true,
+        message: "MongoDB connection test successful",
+        testCreated: testRegistration.fullName,
+        totalDocuments: allRegistrations.length,
+        testDeleted: true
+      });
+    } catch (error) {
+      res.status(500).json({
+        success: false,
+        message: "MongoDB connection test failed",
+        error: error.message
       });
     }
   });

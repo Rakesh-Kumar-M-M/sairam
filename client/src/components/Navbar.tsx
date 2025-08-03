@@ -12,6 +12,7 @@ export function Navbar() {
     { href: "/about", label: "About" },
     { href: "/brochure", label: "Brochure" },
     { href: "/register", label: "Register Now" },
+    { href: "/admin-login", label: "Admin" },
   ];
 
   const handleBrochureClick = (e: React.MouseEvent) => {
