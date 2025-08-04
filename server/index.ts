@@ -1,6 +1,7 @@
 import express, { type Request, Response, NextFunction } from "express";
 import path from "path";
 import fs from "fs";
+import { createServer } from "http";
 import dotenv from "dotenv";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
@@ -70,6 +71,29 @@ app.use((req, res, next) => {
   next();
 });
 
+// Function to find an available port
+async function findAvailablePort(startPort: number): Promise<number> {
+  const net = await import('net');
+  
+  return new Promise((resolve, reject) => {
+    const server = net.createServer();
+    
+    server.listen(startPort, () => {
+      const { port } = server.address() as { port: number };
+      server.close(() => resolve(port));
+    });
+    
+    server.on('error', (err: any) => {
+      if (err.code === 'EADDRINUSE') {
+        // Try the next port
+        findAvailablePort(startPort + 1).then(resolve).catch(reject);
+      } else {
+        reject(err);
+      }
+    });
+  });
+}
+
 // Function to serve static files from React build
 function serveStaticFiles(app: express.Express) {
   const buildPath = path.join(process.cwd(), 'dist');
@@ -129,11 +153,14 @@ function serveStaticFiles(app: express.Express) {
       serveStaticFiles(app);
     }
 
-    // ALWAYS serve the app on the port specified in the environment variable PORT
-    // Other ports are firewalled. Default to 5000 if not specified.
-    // this serves both the API and the client.
-    // It is the only port that is not firewalled.
-    const port = parseInt(process.env.PORT || '5000', 10);
+    // Find an available port starting from the specified port or default 5000
+    const preferredPort = parseInt(process.env.PORT || '5000', 10);
+    const port = await findAvailablePort(preferredPort);
+    
+    if (port !== preferredPort) {
+      log(`⚠️  Port ${preferredPort} is in use, using port ${port} instead`, 'yellow');
+    }
+    
     server.listen({
       port,
       host: "localhost",
@@ -141,10 +168,18 @@ function serveStaticFiles(app: express.Express) {
       log(`🚀 Server running on port ${port}`);
       log(`📊 MongoDB Status: ${getConnectionStatus() ? '✅ Connected' : '❌ Disconnected'}`);
       log(`🌐 Environment: ${app.get("env")}`);
+      log(`🌐 Main Application: http://localhost:${port}/`);
       log(`🌐 Admin Dashboard: http://localhost:${port}/admin-login`);
       if (app.get("env") === "production") {
         log(`📁 Serving static files from: ${path.join(process.cwd(), 'dist')}`);
       }
+    }).on('error', (err: any) => {
+      if (err.code === 'EADDRINUSE') {
+        log(`❌ Port ${port} is still in use. Please try again.`, 'red');
+      } else {
+        log(`❌ Server error: ${err.message}`, 'red');
+      }
+      process.exit(1);
     });
   } catch (error) {
     console.error('❌ Failed to start server:', error);

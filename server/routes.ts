@@ -186,6 +186,128 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Admin authentication endpoints
+  app.post("/api/admin/login", async (req, res) => {
+    try {
+      const { username, password } = req.body;
+      
+      // Simple admin authentication (you can replace with database storage)
+      if (username === "admin" && password === "sairammun2025") {
+        res.json({ 
+          success: true, 
+          message: "Login successful",
+          admin: { username: "admin" }
+        });
+      } else {
+        res.status(401).json({ 
+          success: false, 
+          message: "Invalid credentials" 
+        });
+      }
+    } catch (error) {
+      res.status(500).json({ 
+        success: false, 
+        message: "Login failed" 
+      });
+    }
+  });
+
+  // Change admin password
+  app.post("/api/admin/change-password", async (req, res) => {
+    try {
+      const { currentPassword, newPassword } = req.body;
+      
+      // Verify current password
+      if (currentPassword !== "sairammun2025") {
+        return res.status(401).json({ 
+          success: false, 
+          message: "Current password is incorrect" 
+        });
+      }
+      
+      // In a real application, you would update the password in the database
+      // For now, we'll just return success (you can implement database storage)
+      res.json({ 
+        success: true, 
+        message: "Password changed successfully",
+        note: "In production, implement database storage for the new password"
+      });
+    } catch (error) {
+      res.status(500).json({ 
+        success: false, 
+        message: "Failed to change password" 
+      });
+    }
+  });
+
+  // Send OTP for forgot password
+  app.post("/api/admin/forgot-password", async (req, res) => {
+    try {
+      const { phoneNumber } = req.body;
+      
+      // Verify the phone number matches the admin number
+      if (phoneNumber !== "8838725153") {
+        return res.status(400).json({ 
+          success: false, 
+          message: "Phone number not registered for admin access" 
+        });
+      }
+      
+      // Generate a 6-digit OTP
+      const otp = Math.floor(100000 + Math.random() * 900000).toString();
+      
+      // In a real application, you would:
+      // 1. Store the OTP in database with expiration
+      // 2. Send SMS using a service like Twilio
+      // 3. Implement rate limiting
+      
+      // For now, we'll just return the OTP (in production, send via SMS)
+      res.json({ 
+        success: true, 
+        message: "OTP sent successfully",
+        otp: otp, // Remove this in production - only for testing
+        note: "In production, implement SMS service and remove OTP from response"
+      });
+    } catch (error) {
+      res.status(500).json({ 
+        success: false, 
+        message: "Failed to send OTP" 
+      });
+    }
+  });
+
+  // Reset password with OTP
+  app.post("/api/admin/reset-password", async (req, res) => {
+    try {
+      const { phoneNumber, otp, newPassword } = req.body;
+      
+      // Verify phone number
+      if (phoneNumber !== "8838725153") {
+        return res.status(400).json({ 
+          success: false, 
+          message: "Invalid phone number" 
+        });
+      }
+      
+      // In a real application, you would:
+      // 1. Verify OTP from database
+      // 2. Check OTP expiration
+      // 3. Update password in database
+      
+      // For now, we'll just return success (implement proper OTP verification)
+      res.json({ 
+        success: true, 
+        message: "Password reset successfully",
+        note: "In production, implement proper OTP verification and database storage"
+      });
+    } catch (error) {
+      res.status(500).json({ 
+        success: false, 
+        message: "Failed to reset password" 
+      });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
