@@ -1,5 +1,5 @@
-import { Registration, IRegistration } from './models/Registration';
-import { type InsertRegistration } from '@shared/schema';
+import { Registration, IRegistrationDocument } from './models/Registration';
+import { type InsertRegistration, type IRegistration } from '@shared/schema';
 
 export interface IMongoStorage {
   createRegistration(registration: InsertRegistration): Promise<IRegistration>;
@@ -24,17 +24,27 @@ export interface IMongoStorage {
 export class MongoStorage implements IMongoStorage {
   async createRegistration(registrationData: InsertRegistration): Promise<IRegistration> {
     try {
+      console.log('📝 Creating registration with data:', registrationData);
+      
       const registration = new Registration({
         ...registrationData,
         paymentStatus: 'pending',
         createdAt: new Date()
       });
       
+      console.log('📝 Registration model created:', registration);
+      
       const savedRegistration = await registration.save();
       console.log(`✅ Created new registration: ${savedRegistration.fullName} (ID: ${savedRegistration._id})`);
       return savedRegistration;
     } catch (error) {
-      console.error('❌ Error creating registration:', error);
+      console.error('❌ Error creating registration:', {
+        error: error,
+        errorMessage: error instanceof Error ? error.message : 'Unknown error',
+        errorStack: error instanceof Error ? error.stack : 'No stack trace',
+        errorName: error instanceof Error ? error.name : 'Unknown error type',
+        registrationData: registrationData
+      });
       throw error;
     }
   }
