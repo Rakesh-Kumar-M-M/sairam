@@ -82,6 +82,53 @@ SairamMunWebsite/
    npm start
    ```
 
+## 🐳 Docker Deployment
+
+### Using Docker
+
+1. **Build the Docker image**
+   ```bash
+   # Using the build script
+   ./scripts/build-docker.sh
+   
+   # Or manually
+   docker build -t sairam-mun-website:latest .
+   ```
+
+2. **Run the container**
+   ```bash
+   docker run -p 10000:10000 \
+     -e MONGODB_URI=your_mongodb_uri \
+     -e NODE_ENV=production \
+     sairam-mun-website:latest
+   ```
+
+### Using Docker Compose
+
+1. **Set environment variables**
+   ```bash
+   export MONGODB_URI=your_mongodb_atlas_connection_string
+   ```
+
+2. **Start the application**
+   ```bash
+   docker-compose up -d
+   ```
+
+3. **View logs**
+   ```bash
+   docker-compose logs -f
+   ```
+
+### Docker Features
+
+- ✅ **Multi-stage builds** for smaller production images
+- ✅ **Native module support** with Alpine Linux
+- ✅ **Health checks** for container monitoring
+- ✅ **Non-root user** for security
+- ✅ **Optimized caching** for faster builds
+- ✅ **Cross-platform compatibility**
+
 ## 🌐 Deployment on Render
 
 ### Automatic Deployment

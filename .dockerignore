@@ -28,8 +28,6 @@ build
 *.swp
 *.swo
 *~
-.DS_Store
-Thumbs.db
 
 # OS generated files
 .DS_Store
@@ -127,8 +125,8 @@ README.md
 
 # Docker
 Dockerfile
+Dockerfile.alpine
 .dockerignore
-docker-compose*.yml
 
 # CI/CD
 .github
@@ -137,4 +135,7 @@ docker-compose*.yml
 .circleci
 
 # Render
-render.yaml 
+render.yaml
+
+# Keep .npmrc for Docker builds
+!.npmrc 

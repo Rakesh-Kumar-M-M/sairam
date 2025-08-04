@@ -4,16 +4,24 @@ FROM node:18-alpine AS base
 # Set working directory
 WORKDIR /app
 
+# Install system dependencies for native modules
+RUN apk add --no-cache \
+    libc6-compat \
+    python3 \
+    make \
+    g++ \
+    && rm -rf /var/cache/apk/*
+
 # Install dependencies only when needed
 FROM base AS deps
-# Check https://github.com/nodejs/docker-node/tree/b4117f9333da4138b03a546ec926ef50a31506c3#nodealpine to understand why libc6-compat might be needed.
-RUN apk add --no-cache libc6-compat
 
-# Copy package files
-COPY package.json package-lock.json* ./
+# Copy package files and npm configuration
+COPY package.json package-lock.json* .npmrc ./
 
-# Install all dependencies (including dev dependencies for build)
-RUN npm install
+# Install dependencies with fallback for native modules
+RUN npm config set python /usr/bin/python3 \
+    && npm install --production=false --legacy-peer-deps \
+    && npm cache clean --force
 
 # Rebuild the source code only when needed
 FROM base AS builder
@@ -22,18 +30,25 @@ WORKDIR /app
 # Copy dependencies from deps stage
 COPY --from=deps /app/node_modules ./node_modules
 
-# Copy source code
+# Copy source code and npm configuration
 COPY . .
 
-# Build the application
-RUN npm run build
+# Set environment variables for build
+ENV NODE_ENV=production
+ENV NODE_OPTIONS="--max-old-space-size=4096"
+
+# Build the application with error handling
+RUN npm run build || (echo "Build failed, trying with legacy peer deps..." && npm install --legacy-peer-deps && npm run build)
 
 # Production image, copy all the files and run the app
-FROM base AS runner
+FROM node:18-alpine AS runner
 WORKDIR /app
 
 ENV NODE_ENV=production
 ENV PORT=10000
+
+# Install only production dependencies
+RUN apk add --no-cache libc6-compat
 
 # Create a non-root user
 RUN addgroup --system --gid 1001 nodejs
@@ -41,8 +56,12 @@ RUN adduser --system --uid 1001 nodejs
 
 # Copy built application
 COPY --from=builder /app/dist ./dist
-COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/package.json ./package.json
+
+# Install only production dependencies in final image
+RUN npm install --only=production --ignore-scripts \
+    && npm cache clean --force \
+    && rm -rf /tmp/*
 
 # Change ownership to nodejs user
 RUN chown -R nodejs:nodejs /app

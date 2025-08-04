@@ -11,6 +11,7 @@
     "build": "npm run build:client && npm run build:server",
     "build:client": "vite build",
     "build:server": "esbuild server/index.ts --platform=node --packages=external --bundle --format=esm --outdir=dist",
+    "build:docker": "npm run build:client && npm run build:server",
     "start": "cross-env NODE_ENV=production node dist/index.js",
     "start:dev": "cross-env tsx server/index.ts",
     "check": "tsc",
@@ -98,5 +99,10 @@
     "typescript"
   ],
   "author": "Sairam MUN Team",
-  "license": "MIT"
+  "license": "MIT",
+  "overrides": {
+    "rollup": {
+      "fsevents": "~2.3.3"
+    }
+  }
 }
