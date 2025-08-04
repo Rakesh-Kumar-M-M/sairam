@@ -19,7 +19,12 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 // CORS configuration
 const corsOptions = {
   origin: process.env.NODE_ENV === 'production'
-    ? [process.env.FRONTEND_URL || 'https://your-app-name.onrender.com']
+    ? [
+        process.env.FRONTEND_URL,
+        process.env.RENDER_EXTERNAL_URL,
+        'https://sairam-mun-website.onrender.com',
+        'https://your-app-name.onrender.com' // Keep as fallback
+      ].filter(Boolean) // Remove undefined values
     : ['http://localhost:5173', 'http://localhost:5174', 'http://localhost:3000'],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
@@ -28,6 +33,11 @@ const corsOptions = {
 
 app.use((req, res, next) => {
   const origin = req.headers.origin;
+  
+  // Log CORS requests for debugging
+  console.log(`🌐 CORS request from: ${origin}`);
+  console.log(`🔧 Allowed origins: ${corsOptions.origin.join(', ')}`);
+  
   if (corsOptions.origin.includes(origin as string) || corsOptions.origin.includes('*')) {
     res.header('Access-Control-Allow-Origin', origin);
   }
