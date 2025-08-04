@@ -15,9 +15,8 @@ WORKDIR /app
 # Copy package files first for better caching
 COPY package.json package-lock.json* ./
 
-# Install dependencies with specific flags for Alpine
-RUN npm config set python /usr/bin/python3 \
-    && npm install --production=false --legacy-peer-deps \
+# Install dependencies with proper native module support
+RUN npm install --production=false --legacy-peer-deps \
     && npm cache clean --force
 
 # Copy source code

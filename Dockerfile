@@ -4,7 +4,7 @@ FROM node:18-alpine AS base
 # Set working directory
 WORKDIR /app
 
-# Install system dependencies for native modules
+# Install system dependencies for native modules (esbuild, drizzle, tailwind)
 RUN apk add --no-cache \
     libc6-compat \
     python3 \
@@ -18,9 +18,9 @@ FROM base AS deps
 # Copy package files and npm configuration
 COPY package.json package-lock.json* .npmrc ./
 
-# Install dependencies with fallback for native modules
-RUN npm config set python /usr/bin/python3 \
-    && npm install --production=false --legacy-peer-deps \
+# Install dependencies with proper native module support
+# Using --legacy-peer-deps for better compatibility with complex dependency trees
+RUN npm install --production=false --legacy-peer-deps \
     && npm cache clean --force
 
 # Rebuild the source code only when needed
@@ -37,8 +37,11 @@ COPY . .
 ENV NODE_ENV=production
 ENV NODE_OPTIONS="--max-old-space-size=4096"
 
-# Build the application with error handling
-RUN npm run build || (echo "Build failed, trying with legacy peer deps..." && npm install --legacy-peer-deps && npm run build)
+# Build the application with comprehensive error handling
+RUN npm run build || (echo "Initial build failed, retrying with clean install..." && \
+    rm -rf node_modules && \
+    npm install --production=false --legacy-peer-deps && \
+    npm run build)
 
 # Production image, copy all the files and run the app
 FROM node:18-alpine AS runner
