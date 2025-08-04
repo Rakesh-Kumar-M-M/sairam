@@ -73,11 +73,14 @@ function serveStaticFiles() {
   if (fs.existsSync(distPath)) {
     app.use(express.static(distPath));
     console.log(`📁 Serving static files from: ${distPath}`);
+    return distPath;
   } else if (fs.existsSync(clientDistPath)) {
     app.use(express.static(clientDistPath));
     console.log(`📁 Serving static files from: ${clientDistPath}`);
+    return clientDistPath;
   } else {
     console.log('⚠️  No dist folder found for static files');
+    return null;
   }
 }
 
@@ -94,21 +97,23 @@ app.get("/api/health", (req, res) => {
 
 // Register API routes
 registerRoutes(app).then((server) => {
-  // Serve static files for production
-  if (process.env.NODE_ENV === 'production') {
-    serveStaticFiles();
-    
-    // Handle client-side routing
+  // Serve static files (both development and production)
+  const staticPath = serveStaticFiles();
+  
+  // Handle client-side routing (both development and production)
+  if (staticPath) {
     app.get('*', (req, res) => {
-      const distPath = path.join(process.cwd(), 'dist', 'index.html');
-      const clientDistPath = path.join(process.cwd(), 'client', 'dist', 'index.html');
+      // Skip API routes
+      if (req.path.startsWith('/api/')) {
+        return res.status(404).json({ error: 'API endpoint not found' });
+      }
       
-      if (fs.existsSync(distPath)) {
-        res.sendFile(distPath);
-      } else if (fs.existsSync(clientDistPath)) {
-        res.sendFile(clientDistPath);
+      const indexPath = path.join(staticPath, 'index.html');
+      
+      if (fs.existsSync(indexPath)) {
+        res.sendFile(indexPath);
       } else {
-        res.status(404).json({ error: 'Not found' });
+        res.status(404).json({ error: 'index.html not found' });
       }
     });
   }
@@ -135,8 +140,8 @@ registerRoutes(app).then((server) => {
         console.log(`🌐 Environment: ${app.get("env")}`);
         console.log(`🌐 Main Application: http://localhost:${port}/`);
         console.log(`🌐 Admin Dashboard: http://localhost:${port}/admin-login`);
-        if (app.get("env") === "production") {
-          console.log(`📁 Serving static files from: ${path.join(process.cwd(), 'dist')}`);
+        if (staticPath) {
+          console.log(`📁 Serving static files from: ${staticPath}`);
         }
       }).on('error', (err: any) => {
         if (err.code === 'EADDRINUSE') {

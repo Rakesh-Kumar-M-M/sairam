@@ -5,6 +5,7 @@ import path from 'path'
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [react()],
+  root: path.resolve(__dirname, './client'),
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./client/src"),
@@ -12,7 +13,7 @@ export default defineConfig({
     },
   },
   build: {
-    outDir: 'dist',
+    outDir: path.resolve(__dirname, 'dist'),
     sourcemap: false,
     rollupOptions: {
       output: {
