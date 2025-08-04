@@ -5,14 +5,15 @@ import path from 'path'
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [react()],
+  root: path.resolve(__dirname, '.'),
   resolve: {
     alias: {
-      "@": path.resolve(__dirname, "./client/src"),
-      "@shared": path.resolve(__dirname, "./shared"),
+      "@": path.resolve(__dirname, "./src"),
+      "@shared": path.resolve(__dirname, "../shared"),
     },
   },
   build: {
-    outDir: 'dist',
+    outDir: path.resolve(__dirname, '../dist'),
     sourcemap: false,
     rollupOptions: {
       output: {
@@ -35,5 +36,4 @@ export default defineConfig({
   preview: {
     port: 5173,
   },
-})
-
+}) 

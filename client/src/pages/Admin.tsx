@@ -133,32 +133,7 @@ export default function Admin() {
      });
    };
 
-   const handleMigrateCommittee = async () => {
-     try {
-       const response = await apiRequest("POST", "/api/migrate/committee");
-       const data = await response.json();
-       if (data.success) {
-         toast({
-           title: "Migration Successful",
-           description: `Updated ${data.updatedCount} registrations with committee field.`,
-         });
-         // Refetch registrations
-         window.location.reload();
-       } else {
-         toast({
-           title: "Migration Failed",
-           description: data.message || "Failed to migrate committee field.",
-           variant: "destructive",
-         });
-       }
-     } catch (error) {
-       toast({
-         title: "Migration Error",
-         description: "Failed to run migration.",
-         variant: "destructive",
-       });
-     }
-   };
+   
 
   if (error) {
     return (
@@ -275,7 +250,7 @@ export default function Admin() {
           transition={{ delay: 0.2 }}
           className="bg-slate-800 border border-slate-700 rounded-lg p-6 mb-8"
         >
-                     <div className="grid grid-cols-1 md:grid-cols-7 gap-4">
+                     <div className="grid grid-cols-1 md:grid-cols-6 gap-4">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 h-4 w-4" />
               <Input
@@ -340,13 +315,7 @@ export default function Admin() {
                <Download className="mr-2 h-4 w-4" />
                Export CSV
              </Button>
-             <Button
-               onClick={handleMigrateCommittee}
-               className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700"
-             >
-               <Filter className="mr-2 h-4 w-4" />
-               Fix Committee Data
-             </Button>
+             
           </div>
         </motion.div>
 

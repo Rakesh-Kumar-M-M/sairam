@@ -1,21 +1,25 @@
-import express, { type Request, Response, NextFunction } from "express";
+import express from "express";
+import cors from "cors";
 import path from "path";
 import fs from "fs";
-import { createServer } from "http";
 import dotenv from "dotenv";
 import { registerRoutes } from "./routes";
-import { setupVite, serveStatic, log } from "./vite";
 import { connectToMongoDB, getConnectionStatus } from "./mongodb";
 
 // Load environment variables
 dotenv.config();
 
 const app = express();
+const PORT = process.env.PORT || 5000;
+
+// Middleware
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 // CORS configuration
 const corsOptions = {
-  origin: process.env.NODE_ENV === 'production' 
-    ? [process.env.FRONTEND_URL || 'http://localhost:5000'] 
+  origin: process.env.NODE_ENV === 'production'
+    ? [process.env.FRONTEND_URL || 'https://your-app-name.onrender.com']
     : ['http://localhost:5173', 'http://localhost:5174', 'http://localhost:3000'],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
@@ -30,7 +34,6 @@ app.use((req, res, next) => {
   res.header('Access-Control-Allow-Methods', corsOptions.methods.join(', '));
   res.header('Access-Control-Allow-Headers', corsOptions.allowedHeaders.join(', '));
   res.header('Access-Control-Allow-Credentials', 'true');
-  
   if (req.method === 'OPTIONS') {
     res.sendStatus(200);
   } else {
@@ -38,51 +41,18 @@ app.use((req, res, next) => {
   }
 });
 
-app.use(express.json());
-app.use(express.urlencoded({ extended: false }));
-
-app.use((req, res, next) => {
-  const start = Date.now();
-  const path = req.path;
-  let capturedJsonResponse: Record<string, any> | undefined = undefined;
-
-  const originalResJson = res.json;
-  res.json = function (bodyJson, ...args) {
-    capturedJsonResponse = bodyJson;
-    return originalResJson.apply(res, [bodyJson, ...args]);
-  };
-
-  res.on("finish", () => {
-    const duration = Date.now() - start;
-    if (path.startsWith("/api")) {
-      let logLine = `${req.method} ${path} ${res.statusCode} in ${duration}ms`;
-      if (capturedJsonResponse) {
-        logLine += ` :: ${JSON.stringify(capturedJsonResponse)}`;
-      }
-
-      if (logLine.length > 80) {
-        logLine = logLine.slice(0, 79) + "…";
-      }
-
-      log(logLine);
-    }
-  });
-
-  next();
-});
-
 // Function to find an available port
 async function findAvailablePort(startPort: number): Promise<number> {
   const net = await import('net');
-  
+
   return new Promise((resolve, reject) => {
     const server = net.createServer();
-    
+
     server.listen(startPort, () => {
       const { port } = server.address() as { port: number };
       server.close(() => resolve(port));
     });
-    
+
     server.on('error', (err: any) => {
       if (err.code === 'EADDRINUSE') {
         // Try the next port
@@ -94,95 +64,107 @@ async function findAvailablePort(startPort: number): Promise<number> {
   });
 }
 
-// Function to serve static files from React build
-function serveStaticFiles(app: express.Express) {
-  const buildPath = path.join(process.cwd(), 'dist');
+// Function to serve static files
+function serveStaticFiles() {
+  const distPath = path.join(process.cwd(), 'dist');
+  const clientDistPath = path.join(process.cwd(), 'client', 'dist');
   
-  // Check if build directory exists
-  if (!fs.existsSync(buildPath)) {
-    console.error(`❌ Build directory not found: ${buildPath}`);
-    console.error('Please run "npm run build" to build the React app first');
-    process.exit(1);
+  // Check if dist folder exists
+  if (fs.existsSync(distPath)) {
+    app.use(express.static(distPath));
+    console.log(`📁 Serving static files from: ${distPath}`);
+  } else if (fs.existsSync(clientDistPath)) {
+    app.use(express.static(clientDistPath));
+    console.log(`📁 Serving static files from: ${clientDistPath}`);
+  } else {
+    console.log('⚠️  No dist folder found for static files');
   }
-
-  // Serve static files from the build directory
-  app.use(express.static(buildPath, {
-    maxAge: '1y', // Cache static assets for 1 year
-    etag: true,
-    lastModified: true
-  }));
-
-  // Handle client-side routing - serve index.html for all non-API routes
-  app.get('*', (req, res, next) => {
-    // Skip API routes
-    if (req.path.startsWith('/api/')) {
-      return next();
-    }
-    
-    // Serve index.html for all other routes (client-side routing)
-    res.sendFile(path.join(buildPath, 'index.html'), (err) => {
-      if (err) {
-        console.error('Error serving index.html:', err);
-        res.status(500).send('Error loading application');
-      }
-    });
-  });
 }
 
-(async () => {
-  try {
-    // Connect to MongoDB Atlas
-    await connectToMongoDB();
+// Health check endpoint
+app.get("/api/health", (req, res) => {
+  res.json({
+    success: true,
+    message: "Server is healthy",
+    timestamp: new Date().toISOString(),
+    environment: process.env.NODE_ENV || 'development',
+    mongodb: getConnectionStatus() ? 'connected' : 'disconnected'
+  });
+});
+
+// Register API routes
+registerRoutes(app).then((server) => {
+  // Serve static files for production
+  if (process.env.NODE_ENV === 'production') {
+    serveStaticFiles();
     
-    const server = await registerRoutes(app);
-
-    app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
-      const status = err.status || err.statusCode || 500;
-      const message = err.message || "Internal Server Error";
-
-      res.status(status).json({ message });
-      throw err;
-    });
-
-    // Serve static files and handle client-side routing
-    if (app.get("env") === "development") {
-      // Development: Use Vite dev server
-      await setupVite(app, server);
-    } else {
-      // Production: Serve React build from dist folder
-      serveStaticFiles(app);
-    }
-
-    // Find an available port starting from the specified port or default 5000
-    const preferredPort = parseInt(process.env.PORT || '5000', 10);
-    const port = await findAvailablePort(preferredPort);
-    
-    if (port !== preferredPort) {
-      log(`⚠️  Port ${preferredPort} is in use, using port ${port} instead`, 'yellow');
-    }
-    
-    server.listen({
-      port,
-      host: "localhost",
-    }, () => {
-      log(`🚀 Server running on port ${port}`);
-      log(`📊 MongoDB Status: ${getConnectionStatus() ? '✅ Connected' : ' Disconnected'}`);
-      log(`🌐 Environment: ${app.get("env")}`);
-      log(`🌐 Main Application: http://localhost:${port}/`);
-      log(`🌐 Admin Dashboard: http://localhost:${port}/admin-login`);
-      if (app.get("env") === "production") {
-        log(`📁 Serving static files from: ${path.join(process.cwd(), 'dist')}`);
-      }
-    }).on('error', (err: any) => {
-      if (err.code === 'EADDRINUSE') {
-        log(`Port ${port} is still in use. Please try again.`, 'red');
+    // Handle client-side routing
+    app.get('*', (req, res) => {
+      const distPath = path.join(process.cwd(), 'dist', 'index.html');
+      const clientDistPath = path.join(process.cwd(), 'client', 'dist', 'index.html');
+      
+      if (fs.existsSync(distPath)) {
+        res.sendFile(distPath);
+      } else if (fs.existsSync(clientDistPath)) {
+        res.sendFile(clientDistPath);
       } else {
-        log(` Server error: ${err.message}`, 'red');
+        res.status(404).json({ error: 'Not found' });
       }
-      process.exit(1);
     });
-  } catch (error) {
-    console.error('Failed to start server:', error);
-    process.exit(1);
   }
-})();
+
+  // Start server
+  const startServer = async () => {
+    try {
+      // Connect to MongoDB
+      await connectToMongoDB();
+      
+      const preferredPort = parseInt(process.env.PORT || '5000', 10);
+      const port = await findAvailablePort(preferredPort);
+
+      if (port !== preferredPort) {
+        console.log(`⚠️  Port ${preferredPort} is in use, using port ${port} instead`);
+      }
+
+      server.listen({
+        port,
+        host: process.env.NODE_ENV === 'production' ? '0.0.0.0' : 'localhost',
+      }, () => {
+        console.log(`🚀 Server running on port ${port}`);
+        console.log(`📊 MongoDB Status: ${getConnectionStatus() ? '✅ Connected' : '❌ Disconnected'}`);
+        console.log(`🌐 Environment: ${app.get("env")}`);
+        console.log(`🌐 Main Application: http://localhost:${port}/`);
+        console.log(`🌐 Admin Dashboard: http://localhost:${port}/admin-login`);
+        if (app.get("env") === "production") {
+          console.log(`📁 Serving static files from: ${path.join(process.cwd(), 'dist')}`);
+        }
+      }).on('error', (err: any) => {
+        if (err.code === 'EADDRINUSE') {
+          console.log(`❌ Port ${port} is still in use. Please try again.`);
+        } else {
+          console.log(`❌ Server error: ${err.message}`);
+        }
+        process.exit(1);
+      });
+    } catch (error) {
+      console.error('❌ Failed to start server:', error);
+      process.exit(1);
+    }
+  };
+
+  startServer();
+}).catch((error) => {
+  console.error('❌ Failed to register routes:', error);
+  process.exit(1);
+});
+
+// Graceful shutdown
+process.on('SIGTERM', () => {
+  console.log('🛑 SIGTERM received, shutting down gracefully');
+  process.exit(0);
+});
+
+process.on('SIGINT', () => {
+  console.log('🛑 SIGINT received, shutting down gracefully');
+  process.exit(0);
+});
