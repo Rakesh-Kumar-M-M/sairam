@@ -2,17 +2,15 @@ import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { useQuery } from "@tanstack/react-query";
 import { useLocation } from "wouter";
-import { Search, Download, Eye, Filter, Users, Calendar, DollarSign, LogOut, Settings, Lock } from "lucide-react";
+import { Search, Download, Eye, EyeOff, Filter, Users, Calendar, DollarSign, LogOut } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 
 interface Registration {
   _id: string;
@@ -24,6 +22,7 @@ interface Registration {
   college: string;
   preferredCountry: string;
   phoneNumber: string;
+  committee: "UNEP" | "UNSC";
   paymentStatus: "pending" | "completed" | "failed";
   createdAt: string;
 }
@@ -32,15 +31,9 @@ export default function Admin() {
   const [searchTerm, setSearchTerm] = useState("");
   const [yearFilter, setYearFilter] = useState<string>("all");
   const [collegeFilter, setCollegeFilter] = useState<string>("all");
+  const [committeeFilter, setCommitteeFilter] = useState<string>("all");
   const [paymentFilter, setPaymentFilter] = useState<string>("all");
-  const [showPasswordDialog, setShowPasswordDialog] = useState(false);
-  const [currentPassword, setCurrentPassword] = useState("");
-  const [newPassword, setNewPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
-  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
-  const [showNewPassword, setShowNewPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [isChangingPassword, setIsChangingPassword] = useState(false);
+
   const { toast } = useToast();
   const [, setLocation] = useLocation();
 
@@ -61,62 +54,7 @@ export default function Admin() {
     setLocation("/admin-login");
   };
 
-  const handleChangePassword = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (newPassword !== confirmPassword) {
-      toast({
-        title: "Password Mismatch",
-        description: "New password and confirm password do not match.",
-        variant: "destructive",
-      });
-      return;
-    }
 
-    if (newPassword.length < 6) {
-      toast({
-        title: "Password Too Short",
-        description: "New password must be at least 6 characters long.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    setIsChangingPassword(true);
-
-    try {
-      const response = await apiRequest("POST", "/api/admin/change-password", {
-        currentPassword,
-        newPassword,
-      });
-      const data = await response.json();
-
-      if (data.success) {
-        toast({
-          title: "Password Changed",
-          description: "Your password has been changed successfully.",
-        });
-        setShowPasswordDialog(false);
-        setCurrentPassword("");
-        setNewPassword("");
-        setConfirmPassword("");
-      } else {
-        toast({
-          title: "Password Change Failed",
-          description: data.message || "Failed to change password.",
-          variant: "destructive",
-        });
-      }
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to change password. Please try again.",
-        variant: "destructive",
-      });
-    }
-
-    setIsChangingPassword(false);
-  };
 
   // Fetch registrations
   const { data: registrations = [], isLoading, error } = useQuery({
@@ -124,6 +62,7 @@ export default function Admin() {
     queryFn: async () => {
       const response = await apiRequest("GET", "/api/registrations");
       const data = await response.json();
+      console.log("Fetched registrations:", data.registrations);
       return data.registrations || [];
     },
   });
@@ -145,9 +84,10 @@ export default function Admin() {
                          reg.phoneNumber.includes(searchTerm);
     const matchesYear = yearFilter === "all" || reg.year === yearFilter;
     const matchesCollege = collegeFilter === "all" || reg.college === collegeFilter;
+    const matchesCommittee = committeeFilter === "all" || reg.committee === committeeFilter || (!reg.committee && committeeFilter === "all");
     const matchesPayment = paymentFilter === "all" || reg.paymentStatus === paymentFilter;
     
-    return matchesSearch && matchesYear && matchesCollege && matchesPayment;
+    return matchesSearch && matchesYear && matchesCollege && matchesCommittee && matchesPayment;
   });
 
   // Calculate statistics
@@ -159,8 +99,8 @@ export default function Admin() {
   // MongoDB connection status
   const isMongoConnected = healthStatus?.success && healthStatus?.mongodb === "connected";
 
-  const handleExportCSV = () => {
-    const headers = ["ID", "Full Name", "Year", "Department", "Section", "Student ID", "College", "Preferred Country", "Phone Number", "Payment Status", "Registration Date"];
+    const handleExportCSV = () => {
+    const headers = ["ID", "Full Name", "Year", "Department", "Section", "Student ID", "College", "Preferred Country", "Phone Number", "Committee", "Payment Status", "Registration Date"];
     const csvContent = [
       headers.join(","),
              ...filteredRegistrations.map((reg: Registration) => [
@@ -173,24 +113,52 @@ export default function Admin() {
         reg.college,
         reg.preferredCountry,
         reg.phoneNumber,
+        reg.committee || "Not Selected",
         reg.paymentStatus,
         new Date(reg.createdAt).toLocaleDateString()
-      ].join(","))
-    ].join("\n");
+       ].join(","))
+     ].join("\n");
 
-    const blob = new Blob([csvContent], { type: "text/csv" });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `sairam-mun-registrations-${new Date().toISOString().split('T')[0]}.csv`;
-    a.click();
-    window.URL.revokeObjectURL(url);
+     const blob = new Blob([csvContent], { type: "text/csv" });
+     const url = window.URL.createObjectURL(blob);
+     const a = document.createElement("a");
+     a.href = url;
+     a.download = `sairam-mun-registrations-${new Date().toISOString().split('T')[0]}.csv`;
+     a.click();
+     window.URL.revokeObjectURL(url);
 
-    toast({
-      title: "Export Successful",
-      description: "Registration data has been exported to CSV file.",
-    });
-  };
+     toast({
+       title: "Export Successful",
+       description: "Registration data has been exported to CSV file.",
+     });
+   };
+
+   const handleMigrateCommittee = async () => {
+     try {
+       const response = await apiRequest("POST", "/api/migrate/committee");
+       const data = await response.json();
+       if (data.success) {
+         toast({
+           title: "Migration Successful",
+           description: `Updated ${data.updatedCount} registrations with committee field.`,
+         });
+         // Refetch registrations
+         window.location.reload();
+       } else {
+         toast({
+           title: "Migration Failed",
+           description: data.message || "Failed to migrate committee field.",
+           variant: "destructive",
+         });
+       }
+     } catch (error) {
+       toast({
+         title: "Migration Error",
+         description: "Failed to run migration.",
+         variant: "destructive",
+       });
+     }
+   };
 
   if (error) {
     return (
@@ -232,119 +200,7 @@ export default function Admin() {
               </span>
             </div>
           </div>
-          <Dialog open={showPasswordDialog} onOpenChange={setShowPasswordDialog}>
-            <DialogTrigger asChild>
-              <Button
-                variant="outline"
-                className="border-blue-500 text-blue-500 hover:bg-blue-500 hover:text-white mr-3"
-              >
-                <Settings className="mr-2 h-4 w-4" />
-                Settings
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="bg-slate-800 border-slate-700 text-white">
-              <DialogHeader>
-                <DialogTitle className="text-xl font-bold text-white">Change Password</DialogTitle>
-              </DialogHeader>
-              <form onSubmit={handleChangePassword} className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="currentPassword" className="text-slate-300 font-semibold">
-                    Current Password
-                  </Label>
-                  <div className="relative">
-                    <Input
-                      id="currentPassword"
-                      type={showCurrentPassword ? "text" : "password"}
-                      value={currentPassword}
-                      onChange={(e) => setCurrentPassword(e.target.value)}
-                      placeholder="Enter current password"
-                      className="bg-slate-900 border-slate-600 text-white placeholder-slate-400 focus:border-blue-500 focus:ring-blue-500 pr-10"
-                      required
-                    />
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="icon"
-                      className="absolute right-0 top-0 h-full px-3 text-slate-400 hover:text-white"
-                      onClick={() => setShowCurrentPassword(!showCurrentPassword)}
-                    >
-                      {showCurrentPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-                    </Button>
-                  </div>
-                </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="newPassword" className="text-slate-300 font-semibold">
-                    New Password
-                  </Label>
-                  <div className="relative">
-                    <Input
-                      id="newPassword"
-                      type={showNewPassword ? "text" : "password"}
-                      value={newPassword}
-                      onChange={(e) => setNewPassword(e.target.value)}
-                      placeholder="Enter new password"
-                      className="bg-slate-900 border-slate-600 text-white placeholder-slate-400 focus:border-blue-500 focus:ring-blue-500 pr-10"
-                      required
-                    />
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="icon"
-                      className="absolute right-0 top-0 h-full px-3 text-slate-400 hover:text-white"
-                      onClick={() => setShowNewPassword(!showNewPassword)}
-                    >
-                      {showNewPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-                    </Button>
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="confirmPassword" className="text-slate-300 font-semibold">
-                    Confirm New Password
-                  </Label>
-                  <div className="relative">
-                    <Input
-                      id="confirmPassword"
-                      type={showConfirmPassword ? "text" : "password"}
-                      value={confirmPassword}
-                      onChange={(e) => setConfirmPassword(e.target.value)}
-                      placeholder="Confirm new password"
-                      className="bg-slate-900 border-slate-600 text-white placeholder-slate-400 focus:border-blue-500 focus:ring-blue-500 pr-10"
-                      required
-                    />
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="icon"
-                      className="absolute right-0 top-0 h-full px-3 text-slate-400 hover:text-white"
-                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                    >
-                      {showConfirmPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-                    </Button>
-                  </div>
-                </div>
-
-                <div className="flex space-x-3 pt-4">
-                  <Button
-                    type="submit"
-                    disabled={isChangingPassword}
-                    className="flex-1 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
-                  >
-                    {isChangingPassword ? "Changing..." : "Change Password"}
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => setShowPasswordDialog(false)}
-                    className="border-slate-600 text-slate-300 hover:bg-slate-700"
-                  >
-                    Cancel
-                  </Button>
-                </div>
-              </form>
-            </DialogContent>
-          </Dialog>
 
           <Button
             onClick={handleLogout}
@@ -419,7 +275,7 @@ export default function Admin() {
           transition={{ delay: 0.2 }}
           className="bg-slate-800 border border-slate-700 rounded-lg p-6 mb-8"
         >
-          <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+                     <div className="grid grid-cols-1 md:grid-cols-7 gap-4">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 h-4 w-4" />
               <Input
@@ -443,36 +299,54 @@ export default function Admin() {
               </SelectContent>
             </Select>
 
-            <Select value={collegeFilter} onValueChange={setCollegeFilter}>
-              <SelectTrigger className="bg-slate-900 border-slate-600 text-white">
-                <SelectValue placeholder="Filter by College" />
-              </SelectTrigger>
-              <SelectContent className="bg-slate-800 border-slate-600">
-                <SelectItem value="all">All Colleges</SelectItem>
-                <SelectItem value="Sri Sairam Engineering College">Sri Sairam Engineering College</SelectItem>
-                <SelectItem value="Sri Sairam Institute of Technology">Sri Sairam Institute of Technology</SelectItem>
-              </SelectContent>
-            </Select>
+                         <Select value={collegeFilter} onValueChange={setCollegeFilter}>
+               <SelectTrigger className="bg-slate-900 border-slate-600 text-white">
+                 <SelectValue placeholder="Filter by College" />
+               </SelectTrigger>
+               <SelectContent className="bg-slate-800 border-slate-600">
+                 <SelectItem value="all">All Colleges</SelectItem>
+                 <SelectItem value="Sri Sairam Engineering College">Sri Sairam Engineering College</SelectItem>
+                 <SelectItem value="Sri Sairam Institute of Technology">Sri Sairam Institute of Technology</SelectItem>
+               </SelectContent>
+             </Select>
 
-            <Select value={paymentFilter} onValueChange={setPaymentFilter}>
-              <SelectTrigger className="bg-slate-900 border-slate-600 text-white">
-                <SelectValue placeholder="Filter by Payment" />
-              </SelectTrigger>
-              <SelectContent className="bg-slate-800 border-slate-600">
-                <SelectItem value="all">All Payments</SelectItem>
-                <SelectItem value="pending">Pending</SelectItem>
-                <SelectItem value="completed">Completed</SelectItem>
-                <SelectItem value="failed">Failed</SelectItem>
-              </SelectContent>
-            </Select>
+             <Select value={committeeFilter} onValueChange={setCommitteeFilter}>
+               <SelectTrigger className="bg-slate-900 border-slate-600 text-white">
+                 <SelectValue placeholder="Filter by Committee" />
+               </SelectTrigger>
+               <SelectContent className="bg-slate-800 border-slate-600">
+                 <SelectItem value="all">All Committees</SelectItem>
+                 <SelectItem value="UNEP">UNEP</SelectItem>
+                 <SelectItem value="UNSC">UNSC</SelectItem>
+               </SelectContent>
+             </Select>
 
-            <Button
-              onClick={handleExportCSV}
-              className="bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-700 hover:to-blue-700"
-            >
-              <Download className="mr-2 h-4 w-4" />
-              Export CSV
-            </Button>
+             <Select value={paymentFilter} onValueChange={setPaymentFilter}>
+               <SelectTrigger className="bg-slate-900 border-slate-600 text-white">
+                 <SelectValue placeholder="Filter by Payment" />
+               </SelectTrigger>
+               <SelectContent className="bg-slate-800 border-slate-600">
+                 <SelectItem value="all">All Payments</SelectItem>
+                 <SelectItem value="pending">Pending</SelectItem>
+                 <SelectItem value="completed">Completed</SelectItem>
+                 <SelectItem value="failed">Failed</SelectItem>
+               </SelectContent>
+             </Select>
+
+                         <Button
+               onClick={handleExportCSV}
+               className="bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-700 hover:to-blue-700"
+             >
+               <Download className="mr-2 h-4 w-4" />
+               Export CSV
+             </Button>
+             <Button
+               onClick={handleMigrateCommittee}
+               className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700"
+             >
+               <Filter className="mr-2 h-4 w-4" />
+               Fix Committee Data
+             </Button>
           </div>
         </motion.div>
 
@@ -497,52 +371,61 @@ export default function Admin() {
           ) : (
             <div className="overflow-x-auto">
               <Table>
-                <TableHeader>
-                  <TableRow className="border-slate-700">
-                    <TableHead className="text-slate-300">ID</TableHead>
-                    <TableHead className="text-slate-300">Name</TableHead>
-                    <TableHead className="text-slate-300">Year</TableHead>
-                    <TableHead className="text-slate-300">Department</TableHead>
-                    <TableHead className="text-slate-300">College</TableHead>
-                    <TableHead className="text-slate-300">Phone</TableHead>
-                    <TableHead className="text-slate-300">Payment Status</TableHead>
-                    <TableHead className="text-slate-300">Date</TableHead>
-                  </TableRow>
-                </TableHeader>
+                                 <TableHeader>
+                   <TableRow className="border-slate-700">
+                     <TableHead className="text-slate-300">ID</TableHead>
+                     <TableHead className="text-slate-300">Name</TableHead>
+                     <TableHead className="text-slate-300">Year</TableHead>
+                     <TableHead className="text-slate-300">Department</TableHead>
+                     <TableHead className="text-slate-300">College</TableHead>
+                     <TableHead className="text-slate-300">Phone</TableHead>
+                     <TableHead className="text-slate-300">Committee</TableHead>
+                     <TableHead className="text-slate-300">Payment Status</TableHead>
+                     <TableHead className="text-slate-300">Date</TableHead>
+                   </TableRow>
+                 </TableHeader>
                 <TableBody>
-                  {filteredRegistrations.map((registration: Registration) => (
-                                         <TableRow key={registration._id} className="border-slate-700 hover:bg-slate-700/50">
-                       <TableCell className="text-slate-300">{registration._id.slice(-6)}</TableCell>
-                      <TableCell className="text-white font-medium">{registration.fullName}</TableCell>
-                      <TableCell className="text-slate-300">{registration.year}</TableCell>
-                      <TableCell className="text-slate-300">{registration.department}</TableCell>
-                      <TableCell className="text-slate-300">{registration.college}</TableCell>
-                      <TableCell className="text-slate-300">{registration.phoneNumber}</TableCell>
-                      <TableCell>
-                        <Badge
-                          variant={
-                            registration.paymentStatus === "completed"
-                              ? "default"
-                              : registration.paymentStatus === "pending"
-                              ? "secondary"
-                              : "destructive"
-                          }
-                          className={
-                            registration.paymentStatus === "completed"
-                              ? "bg-green-600 hover:bg-green-700"
-                              : registration.paymentStatus === "pending"
-                              ? "bg-yellow-600 hover:bg-yellow-700"
-                              : "bg-red-600 hover:bg-red-700"
-                          }
-                        >
-                          {registration.paymentStatus}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="text-slate-300">
-                        {new Date(registration.createdAt).toLocaleDateString()}
-                      </TableCell>
-                    </TableRow>
-                  ))}
+                                     {filteredRegistrations.map((registration: Registration) => (
+                                          <TableRow key={registration._id} className="border-slate-700 hover:bg-slate-700/50">
+                        <TableCell className="text-slate-300">{registration._id.slice(-6)}</TableCell>
+                       <TableCell className="text-white font-medium">{registration.fullName}</TableCell>
+                       <TableCell className="text-slate-300">{registration.year}</TableCell>
+                       <TableCell className="text-slate-300">{registration.department}</TableCell>
+                       <TableCell className="text-slate-300">{registration.college}</TableCell>
+                       <TableCell className="text-slate-300">{registration.phoneNumber}</TableCell>
+                                               <TableCell>
+                          <Badge
+                            variant="outline"
+                            className="border-blue-500 text-blue-400 hover:bg-blue-500 hover:text-white"
+                          >
+                            {registration.committee || "Not Selected"}
+                          </Badge>
+                        </TableCell>
+                       <TableCell>
+                         <Badge
+                           variant={
+                             registration.paymentStatus === "completed"
+                               ? "default"
+                               : registration.paymentStatus === "pending"
+                               ? "secondary"
+                               : "destructive"
+                           }
+                           className={
+                             registration.paymentStatus === "completed"
+                               ? "bg-green-600 hover:bg-green-700"
+                               : registration.paymentStatus === "pending"
+                               ? "bg-yellow-600 hover:bg-yellow-700"
+                               : "bg-red-600 hover:bg-red-700"
+                           }
+                         >
+                           {registration.paymentStatus}
+                         </Badge>
+                       </TableCell>
+                       <TableCell className="text-slate-300">
+                         {new Date(registration.createdAt).toLocaleDateString()}
+                       </TableCell>
+                     </TableRow>
+                   ))}
                 </TableBody>
               </Table>
             </div>

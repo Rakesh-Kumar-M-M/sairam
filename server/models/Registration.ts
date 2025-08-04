@@ -9,6 +9,7 @@ export interface IRegistration extends Document {
   college: string;
   preferredCountry: string;
   phoneNumber: string;
+  committee: 'UNEP' | 'UNSC';
   paymentStatus: 'pending' | 'completed' | 'failed';
   createdAt: Date;
 }
@@ -56,6 +57,14 @@ const RegistrationSchema = new Schema<IRegistration>({
     type: String,
     required: [true, 'Phone number is required'],
     match: [/^[0-9]{10}$/, 'Phone number must be exactly 10 digits']
+  },
+  committee: {
+    type: String,
+    required: [true, 'Committee selection is required'],
+    enum: {
+      values: ['UNEP', 'UNSC'],
+      message: 'Committee must be UNEP or UNSC'
+    }
   },
   paymentStatus: {
     type: String,

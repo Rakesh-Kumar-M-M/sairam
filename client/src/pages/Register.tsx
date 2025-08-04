@@ -28,6 +28,7 @@ export default function Register() {
       college: "",
       preferredCountry: "",
       phoneNumber: "",
+      committee: undefined,
     },
   });
 
@@ -261,6 +262,24 @@ export default function Register() {
                       <p className="text-red-400 text-sm">{form.formState.errors.phoneNumber.message}</p>
                     )}
                   </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="committee" className="text-slate-300 font-semibold">
+                    Committee Selection <span className="text-red-500">*</span>
+                  </Label>
+                  <Select onValueChange={(value) => form.setValue("committee", value as "UNEP" | "UNSC")}>
+                    <SelectTrigger className="bg-slate-900 border-slate-600 text-white focus:border-blue-500 focus:ring-blue-500">
+                      <SelectValue placeholder="Select Committee" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-slate-800 border-slate-600" position="popper" side="bottom" align="start">
+                      <SelectItem value="UNEP">UNEP (United Nations Environment Policy)</SelectItem>
+                      <SelectItem value="UNSC">UNSC (United Nations Security Council)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  {form.formState.errors.committee && (
+                    <p className="text-red-400 text-sm">{form.formState.errors.committee.message}</p>
+                  )}
                 </div>
 
                 {/* Payment Section */}

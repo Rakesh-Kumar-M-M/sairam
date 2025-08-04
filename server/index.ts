@@ -166,7 +166,7 @@ function serveStaticFiles(app: express.Express) {
       host: "localhost",
     }, () => {
       log(`🚀 Server running on port ${port}`);
-      log(`📊 MongoDB Status: ${getConnectionStatus() ? '✅ Connected' : '❌ Disconnected'}`);
+      log(`📊 MongoDB Status: ${getConnectionStatus() ? '✅ Connected' : ' Disconnected'}`);
       log(`🌐 Environment: ${app.get("env")}`);
       log(`🌐 Main Application: http://localhost:${port}/`);
       log(`🌐 Admin Dashboard: http://localhost:${port}/admin-login`);
@@ -175,14 +175,14 @@ function serveStaticFiles(app: express.Express) {
       }
     }).on('error', (err: any) => {
       if (err.code === 'EADDRINUSE') {
-        log(`❌ Port ${port} is still in use. Please try again.`, 'red');
+        log(`Port ${port} is still in use. Please try again.`, 'red');
       } else {
-        log(`❌ Server error: ${err.message}`, 'red');
+        log(` Server error: ${err.message}`, 'red');
       }
       process.exit(1);
     });
   } catch (error) {
-    console.error('❌ Failed to start server:', error);
+    console.error('Failed to start server:', error);
     process.exit(1);
   }
 })();

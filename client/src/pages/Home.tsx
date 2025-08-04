@@ -79,7 +79,7 @@ export default function Home() {
           </div>
           
           {/* Countdown Timer */}
-          <CountdownTimer targetDate="2025-08-20T00:00:00" />
+          <CountdownTimer targetDate="2025-08-26T00:00:00" />
         </motion.div>
       </section>
 

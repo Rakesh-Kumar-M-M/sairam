@@ -18,6 +18,7 @@ export interface IMongoStorage {
     failed: number;
     revenue: number;
   }>;
+  migrateCommitteeField(): Promise<{ updatedCount: number; totalCount: number }>;
 }
 
 export class MongoStorage implements IMongoStorage {
@@ -165,6 +166,31 @@ export class MongoStorage implements IMongoStorage {
       };
     } catch (error) {
       console.error('❌ Error fetching registration stats:', error);
+      throw error;
+    }
+  }
+
+  async migrateCommitteeField(): Promise<{ updatedCount: number; totalCount: number }> {
+    try {
+      // Find all registrations that don't have a committee field
+      const registrationsWithoutCommittee = await Registration.find({ committee: { $exists: false } });
+      const totalCount = await Registration.countDocuments();
+      
+      if (registrationsWithoutCommittee.length === 0) {
+        console.log('✅ All registrations already have committee field');
+        return { updatedCount: 0, totalCount };
+      }
+
+      // Update all registrations without committee field to have a default value
+      const result = await Registration.updateMany(
+        { committee: { $exists: false } },
+        { $set: { committee: 'UNEP' } } // Default to UNEP
+      );
+
+      console.log(`✅ Migrated ${result.modifiedCount} registrations to include committee field`);
+      return { updatedCount: result.modifiedCount, totalCount };
+    } catch (error) {
+      console.error('❌ Error migrating committee field:', error);
       throw error;
     }
   }
