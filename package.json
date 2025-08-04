@@ -15,8 +15,7 @@
     "start": "cross-env NODE_ENV=production node dist/index.js",
     "start:dev": "cross-env tsx server/index.ts",
     "check": "tsc",
-    "db:push": "drizzle-kit push",
-    "postinstall": "npm run build"
+    "db:push": "drizzle-kit push"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.3.4",
@@ -99,24 +98,5 @@
     "typescript"
   ],
   "author": "Sairam MUN Team",
-  "license": "MIT",
-  "overrides": {
-    "rollup": "4.9.0",
-    "vite": {
-      "rollup": "4.9.0"
-    },
-    "@rollup/rollup-linux-x64-musl": "npm:rollup@4.9.0",
-    "@rollup/rollup-linux-x64-gnu": "npm:rollup@4.9.0",
-    "@rollup/rollup-darwin-x64": "npm:rollup@4.9.0",
-    "@rollup/rollup-darwin-arm64": "npm:rollup@4.9.0",
-    "@rollup/rollup-win32-x64-msvc": "npm:rollup@4.9.0"
-  },
-  "resolutions": {
-    "rollup": "4.9.0",
-    "@rollup/rollup-linux-x64-musl": "npm:rollup@4.9.0",
-    "@rollup/rollup-linux-x64-gnu": "npm:rollup@4.9.0",
-    "@rollup/rollup-darwin-x64": "npm:rollup@4.9.0",
-    "@rollup/rollup-darwin-arm64": "npm:rollup@4.9.0",
-    "@rollup/rollup-win32-x64-msvc": "npm:rollup@4.9.0"
-  }
+  "license": "MIT"
 }

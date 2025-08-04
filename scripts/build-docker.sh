@@ -16,7 +16,7 @@ export ROLLUP_NO_NATIVE=1
 export ROLLUP_SKIP_NATIVE=true
 export NODE_OPTIONS="--max-old-space-size=4096"
 
-echo "🔧 Using JS-only Rollup builds (no native modules)"
+echo "🔧 Using Debian-based Node image (avoids Alpine musl issues)"
 echo "🔧 ROLLUP_NO_NATIVE=1 set"
 
 # Build the image

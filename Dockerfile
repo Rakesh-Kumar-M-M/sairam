@@ -1,13 +1,8 @@
-# Use Node.js 18 Alpine as base image
-FROM node:18-alpine AS base
+# Use Node.js 18 Debian Bullseye as base image (avoids Alpine musl issues)
+FROM node:18-bullseye AS base
 
 # Set working directory
 WORKDIR /app
-
-# Install minimal system dependencies (avoid unnecessary native build tools)
-RUN apk add --no-cache \
-    libc6-compat \
-    && rm -rf /var/cache/apk/*
 
 # Install dependencies only when needed
 FROM base AS deps
@@ -19,9 +14,8 @@ COPY package.json package-lock.json* .npmrc ./
 ENV ROLLUP_NO_NATIVE=1
 ENV ROLLUP_SKIP_NATIVE=true
 
-# Install dependencies with JS-only approach
-# Force omit=optional to prevent native module resolution
-RUN npm install --production=false --legacy-peer-deps --omit=optional \
+# Install dependencies (allow optional dependencies to avoid musl issues)
+RUN npm install --production=false --legacy-peer-deps \
     && npm cache clean --force
 
 # Rebuild the source code only when needed
@@ -44,11 +38,11 @@ ENV ROLLUP_SKIP_NATIVE=true
 # Build the application with JS-only approach
 RUN npm run build || (echo "Initial build failed, retrying with clean install..." && \
     rm -rf node_modules && \
-    npm install --production=false --legacy-peer-deps --omit=optional && \
+    npm install --production=false --legacy-peer-deps && \
     npm run build)
 
 # Production image, copy all the files and run the app
-FROM node:18-alpine AS runner
+FROM node:18-bullseye AS runner
 WORKDIR /app
 
 ENV NODE_ENV=production
@@ -56,19 +50,16 @@ ENV PORT=10000
 # Ensure runtime also uses JS-only Rollup
 ENV ROLLUP_NO_NATIVE=1
 
-# Install only production dependencies
-RUN apk add --no-cache libc6-compat
-
 # Create a non-root user
-RUN addgroup --system --gid 1001 nodejs
-RUN adduser --system --uid 1001 nodejs
+RUN groupadd --system --gid 1001 nodejs \
+    && useradd --system --uid 1001 --gid nodejs nodejs
 
 # Copy built application
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/package.json ./package.json
 
 # Install only production dependencies in final image
-RUN npm install --only=production --ignore-scripts --omit=optional \
+RUN npm install --only=production --ignore-scripts \
     && npm cache clean --force \
     && rm -rf /tmp/*
 
