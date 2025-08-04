@@ -34,10 +34,19 @@ export default function Register() {
 
   const registrationMutation = useMutation({
     mutationFn: async (data: InsertRegistration) => {
-      const response = await apiRequest("POST", "/api/registrations", data);
-      return response.json();
+      console.log('🚀 Submitting registration data:', data);
+      try {
+        const response = await apiRequest("POST", "/api/registrations", data);
+        const result = await response.json();
+        console.log('✅ Registration response:', result);
+        return result;
+      } catch (error) {
+        console.error('❌ Registration error:', error);
+        throw error;
+      }
     },
     onSuccess: (data) => {
+      console.log('🎉 Registration successful:', data);
       setIsRegistered(true);
       form.reset();
       toast({
@@ -46,6 +55,7 @@ export default function Register() {
       });
     },
     onError: (error: any) => {
+      console.error('💥 Registration failed:', error);
       toast({
         title: "Registration Failed",
         description: error.message || "Please try again later.",

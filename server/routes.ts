@@ -3,13 +3,61 @@ import { createServer, type Server } from "http";
 import { mongoStorage } from "./mongoStorage";
 import { insertRegistrationSchema } from "@shared/schema";
 import { z } from "zod";
+import mongoose from "mongoose";
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Health check endpoint with detailed MongoDB status
+  app.get("/api/health", async (req, res) => {
+    try {
+      const mongoStatus = mongoose.connection.readyState;
+      const mongoStatusText = {
+        0: 'disconnected',
+        1: 'connected',
+        2: 'connecting',
+        3: 'disconnecting'
+      }[mongoStatus] || 'unknown';
+
+      console.log('🏥 Health check requested:', {
+        mongoStatus,
+        mongoStatusText,
+        timestamp: new Date().toISOString()
+      });
+
+      res.json({
+        success: true,
+        message: "Server is healthy",
+        mongoDB: {
+          status: mongoStatusText,
+          connected: mongoStatus === 1
+        },
+        timestamp: new Date().toISOString()
+      });
+    } catch (error) {
+      console.error('❌ Health check failed:', error);
+      res.status(500).json({
+        success: false,
+        message: "Health check failed",
+        error: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  });
+
   // Registration endpoint
   app.post("/api/registrations", async (req, res) => {
     try {
+      console.log('📝 Registration request received:', {
+        body: req.body,
+        headers: req.headers,
+        method: req.method,
+        url: req.url
+      });
+
       const validatedData = insertRegistrationSchema.parse(req.body);
+      console.log('✅ Data validated successfully:', validatedData);
+
       const registration = await mongoStorage.createRegistration(validatedData);
+      console.log('✅ Registration created successfully:', registration._id);
+
       res.status(201).json({ 
         success: true, 
         message: "Registration successful",
@@ -20,16 +68,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       });
     } catch (error) {
+      console.error('❌ Registration error details:', {
+        error: error,
+        errorMessage: error instanceof Error ? error.message : 'Unknown error',
+        errorStack: error instanceof Error ? error.stack : 'No stack trace',
+        errorName: error instanceof Error ? error.name : 'Unknown error type'
+      });
+
       if (error instanceof z.ZodError) {
+        console.error('❌ Validation error:', error.errors);
         res.status(400).json({ 
           success: false, 
           message: "Validation error", 
           errors: error.errors 
         });
       } else {
+        console.error('❌ Internal server error:', error);
         res.status(500).json({ 
           success: false, 
-          message: "Internal server error" 
+          message: "Internal server error",
+          error: process.env.NODE_ENV === 'development' ? error.message : undefined
         });
       }
     }
@@ -124,27 +182,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ 
         success: false, 
         message: "Failed to update payment status" 
-      });
-    }
-  });
-
-  // MongoDB connection status endpoint
-  app.get("/api/health", async (req, res) => {
-    try {
-      const stats = await mongoStorage.getRegistrationStats();
-      res.json({ 
-        success: true, 
-        message: "Server is healthy",
-        mongodb: "connected",
-        stats,
-        timestamp: new Date().toISOString()
-      });
-    } catch (error) {
-      res.status(500).json({ 
-        success: false, 
-        message: "Server health check failed",
-        mongodb: "disconnected",
-        error: error.message
       });
     }
   });

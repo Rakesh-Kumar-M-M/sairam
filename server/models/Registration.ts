@@ -1,20 +1,9 @@
 import mongoose, { Schema, Document } from 'mongoose';
+import { IRegistration } from '@shared/schema';
 
-export interface IRegistration extends Document {
-  fullName: string;
-  year: 'I' | 'II' | 'III' | 'IV';
-  department: string;
-  section: string;
-  secId: string;
-  college: string;
-  preferredCountry: string;
-  phoneNumber: string;
-  committee: 'UNEP' | 'UNSC';
-  paymentStatus: 'pending' | 'completed' | 'failed';
-  createdAt: Date;
-}
+export interface IRegistrationDocument extends IRegistration, Document {}
 
-const RegistrationSchema = new Schema<IRegistration>({
+const RegistrationSchema = new Schema<IRegistrationDocument>({
   fullName: {
     type: String,
     required: [true, 'Full name is required'],
@@ -88,4 +77,4 @@ RegistrationSchema.index({ paymentStatus: 1 });
 RegistrationSchema.index({ createdAt: -1 });
 
 // Check if model already exists to prevent OverwriteModelError
-export const Registration = mongoose.models.Registration || mongoose.model<IRegistration>('Registration', RegistrationSchema); 
+export const Registration = mongoose.models.Registration || mongoose.model<IRegistrationDocument>('Registration', RegistrationSchema); 

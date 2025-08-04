@@ -71,5 +71,9 @@ export default defineConfig({
   preview: {
     port: 5173,
   },
+  // Define environment variables for the client
+  define: {
+    __DEV__: process.env.NODE_ENV === 'development',
+  },
 })
 
