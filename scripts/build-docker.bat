@@ -9,10 +9,12 @@ if %errorlevel% neq 0 (
 )
 
 REM Set environment variables for JS-only builds
+set ROLLUP_NO_NATIVE=1
 set ROLLUP_SKIP_NATIVE=true
 set NODE_OPTIONS=--max-old-space-size=4096
 
 echo 🔧 Using JS-only Rollup builds (no native modules)
+echo 🔧 ROLLUP_NO_NATIVE=1 set
 
 REM Build the image
 echo 📦 Building Docker image...

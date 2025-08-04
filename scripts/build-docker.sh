@@ -12,10 +12,12 @@ if ! docker info > /dev/null 2>&1; then
 fi
 
 # Set environment variables for JS-only builds
+export ROLLUP_NO_NATIVE=1
 export ROLLUP_SKIP_NATIVE=true
 export NODE_OPTIONS="--max-old-space-size=4096"
 
 echo "🔧 Using JS-only Rollup builds (no native modules)"
+echo "🔧 ROLLUP_NO_NATIVE=1 set"
 
 # Build the image
 echo "📦 Building Docker image..."

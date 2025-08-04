@@ -15,6 +15,10 @@ FROM base AS deps
 # Copy package files and npm configuration
 COPY package.json package-lock.json* .npmrc ./
 
+# Set environment variables to disable native modules
+ENV ROLLUP_NO_NATIVE=1
+ENV ROLLUP_SKIP_NATIVE=true
+
 # Install dependencies with JS-only approach
 # Force omit=optional to prevent native module resolution
 RUN npm install --production=false --legacy-peer-deps --omit=optional \
@@ -34,6 +38,7 @@ COPY . .
 ENV NODE_ENV=production
 ENV NODE_OPTIONS="--max-old-space-size=4096"
 # Force Rollup to use JS-only version
+ENV ROLLUP_NO_NATIVE=1
 ENV ROLLUP_SKIP_NATIVE=true
 
 # Build the application with JS-only approach
@@ -48,6 +53,8 @@ WORKDIR /app
 
 ENV NODE_ENV=production
 ENV PORT=10000
+# Ensure runtime also uses JS-only Rollup
+ENV ROLLUP_NO_NATIVE=1
 
 # Install only production dependencies
 RUN apk add --no-cache libc6-compat
