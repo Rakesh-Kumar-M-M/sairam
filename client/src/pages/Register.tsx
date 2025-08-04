@@ -27,6 +27,8 @@ export default function Register() {
       secId: "",
       college: "",
       preferredCountry: "",
+      phoneNumber: "",
+      committee: undefined,
     },
   });
 
@@ -222,27 +224,61 @@ export default function Register() {
                   </div>
                 </div>
 
+                <div className="grid md:grid-cols-2 gap-6">
+                  <div className="space-y-2">
+                    <Label htmlFor="preferredCountry" className="text-slate-300 font-semibold">
+                      Preferred Country <span className="text-red-500">*</span>
+                    </Label>
+                    <Input
+                      id="preferredCountry"
+                      {...form.register("preferredCountry")}
+                      placeholder="Enter your preferred country"
+                      className="bg-slate-900 border-slate-600 text-white placeholder-slate-400 focus:border-blue-500 focus:ring-blue-500"
+                    />
+                    {form.formState.errors.preferredCountry && (
+                      <p className="text-red-400 text-sm">{form.formState.errors.preferredCountry.message}</p>
+                    )}
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="phoneNumber" className="text-slate-300 font-semibold">
+                      Phone Number <span className="text-red-500">*</span>
+                    </Label>
+                                         <Input
+                       id="phoneNumber"
+                       {...form.register("phoneNumber")}
+                       placeholder="Mobile number"
+                       maxLength={10}
+                       type="tel"
+                       pattern="[0-9]*"
+                       inputMode="numeric"
+                       onKeyPress={(e) => {
+                         if (!/[0-9]/.test(e.key)) {
+                           e.preventDefault();
+                         }
+                       }}
+                       className="bg-slate-900 border-slate-600 text-white placeholder-slate-400 focus:border-blue-500 focus:ring-blue-500"
+                     />
+                    {form.formState.errors.phoneNumber && (
+                      <p className="text-red-400 text-sm">{form.formState.errors.phoneNumber.message}</p>
+                    )}
+                  </div>
+                </div>
+
                 <div className="space-y-2">
-                                     <Label htmlFor="preferredCountry" className="text-slate-300 font-semibold">
-                     Preferred Country <span className="text-red-500">*</span>
-                   </Label>
-                  <Select onValueChange={(value) => form.setValue("preferredCountry", value)}>
+                  <Label htmlFor="committee" className="text-slate-300 font-semibold">
+                    Committee Selection <span className="text-red-500">*</span>
+                  </Label>
+                  <Select onValueChange={(value) => form.setValue("committee", value as "UNEP" | "UNSC")}>
                     <SelectTrigger className="bg-slate-900 border-slate-600 text-white focus:border-blue-500 focus:ring-blue-500">
-                      <SelectValue placeholder="Select Country" />
+                      <SelectValue placeholder="Select Committee" />
                     </SelectTrigger>
-                    <SelectContent className="bg-slate-800 border-slate-600">
-                      <SelectItem value="India">India</SelectItem>
-                      <SelectItem value="United States">United States</SelectItem>
-                      <SelectItem value="United Kingdom">United Kingdom</SelectItem>
-                      <SelectItem value="Canada">Canada</SelectItem>
-                      <SelectItem value="Germany">Germany</SelectItem>
-                      <SelectItem value="France">France</SelectItem>
-                      <SelectItem value="Australia">Australia</SelectItem>
-                      <SelectItem value="Japan">Japan</SelectItem>
+                    <SelectContent className="bg-slate-800 border-slate-600" position="popper" side="bottom" align="start">
+                      <SelectItem value="UNEP">UNEP (United Nations Environment Policy)</SelectItem>
+                      <SelectItem value="UNSC">UNSC (United Nations Security Council)</SelectItem>
                     </SelectContent>
                   </Select>
-                  {form.formState.errors.preferredCountry && (
-                    <p className="text-red-400 text-sm">{form.formState.errors.preferredCountry.message}</p>
+                  {form.formState.errors.committee && (
+                    <p className="text-red-400 text-sm">{form.formState.errors.committee.message}</p>
                   )}
                 </div>
 

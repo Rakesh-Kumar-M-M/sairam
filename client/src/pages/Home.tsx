@@ -59,11 +59,11 @@ export default function Home() {
           <div className="space-y-2 mb-8 text-slate-300">
             <p className="text-lg flex items-center justify-center gap-2">
               <MapPin className="text-yellow-500" size={20} />
-              Sri Sairam Institutions
+              Sairam Institutions
             </p>
             <p className="text-lg flex items-center justify-center gap-2">
               <Calendar className="text-yellow-500" size={20} />
-              September 2-3, 2025
+              September 3-4, 2025
             </p>
           </div>
           
@@ -79,7 +79,7 @@ export default function Home() {
           </div>
           
           {/* Countdown Timer */}
-          <CountdownTimer targetDate="2025-08-20T00:00:00" />
+          <CountdownTimer targetDate="2025-08-26T00:00:00" />
         </motion.div>
       </section>
 

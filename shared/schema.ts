@@ -17,6 +17,8 @@ export const registrations = pgTable("registrations", {
   secId: text("sec_id").notNull(),
   college: text("college").notNull(),
   preferredCountry: text("preferred_country").notNull(),
+  phoneNumber: text("phone_number").notNull(),
+  committee: text("committee").notNull(),
   paymentStatus: text("payment_status").notNull().default("pending"),
   createdAt: text("created_at").notNull(),
 });
@@ -34,6 +36,8 @@ export const insertRegistrationSchema = createInsertSchema(registrations).pick({
   secId: true,
   college: true,
   preferredCountry: true,
+  phoneNumber: true,
+  committee: true,
 }).extend({
   year: z.enum(["I", "II", "III", "IV"]),
   fullName: z.string().min(2, "Full name must be at least 2 characters"),
@@ -42,6 +46,8 @@ export const insertRegistrationSchema = createInsertSchema(registrations).pick({
   secId: z.string().min(1, "SEC ID is required"),
   college: z.string().min(2, "College name must be at least 2 characters"),
   preferredCountry: z.string().min(2, "Preferred country must be at least 2 characters"),
+  phoneNumber: z.string().regex(/^[0-9]{10}$/, "Phone number must be exactly 10 digits"),
+  committee: z.enum(["UNEP", "UNSC"]),
 });
 
 export type InsertUser = z.infer<typeof insertUserSchema>;
