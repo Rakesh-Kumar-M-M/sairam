@@ -1,16 +1,33 @@
 import express, { type Request, Response, NextFunction } from "express";
+import path from "path";
+import fs from "fs";
+import dotenv from "dotenv";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 import { connectToMongoDB, getConnectionStatus } from "./mongodb";
 
+// Load environment variables
+dotenv.config();
+
 const app = express();
 
-// Add CORS middleware for development
+// CORS configuration
+const corsOptions = {
+  origin: process.env.NODE_ENV === 'production' 
+    ? [process.env.FRONTEND_URL || 'http://localhost:5000'] 
+    : ['http://localhost:5173', 'http://localhost:5174', 'http://localhost:3000'],
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: ['Origin', 'X-Requested-With', 'Content-Type', 'Accept', 'Authorization']
+};
+
 app.use((req, res, next) => {
-  res.header('Access-Control-Allow-Origin', 'http://localhost:5173');
-  res.header('Access-Control-Allow-Origin', 'http://localhost:5174');
-  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
-  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
+  const origin = req.headers.origin;
+  if (corsOptions.origin.includes(origin as string) || corsOptions.origin.includes('*')) {
+    res.header('Access-Control-Allow-Origin', origin);
+  }
+  res.header('Access-Control-Allow-Methods', corsOptions.methods.join(', '));
+  res.header('Access-Control-Allow-Headers', corsOptions.allowedHeaders.join(', '));
   res.header('Access-Control-Allow-Credentials', 'true');
   
   if (req.method === 'OPTIONS') {
@@ -53,6 +70,41 @@ app.use((req, res, next) => {
   next();
 });
 
+// Function to serve static files from React build
+function serveStaticFiles(app: express.Express) {
+  const buildPath = path.join(process.cwd(), 'dist');
+  
+  // Check if build directory exists
+  if (!fs.existsSync(buildPath)) {
+    console.error(`❌ Build directory not found: ${buildPath}`);
+    console.error('Please run "npm run build" to build the React app first');
+    process.exit(1);
+  }
+
+  // Serve static files from the build directory
+  app.use(express.static(buildPath, {
+    maxAge: '1y', // Cache static assets for 1 year
+    etag: true,
+    lastModified: true
+  }));
+
+  // Handle client-side routing - serve index.html for all non-API routes
+  app.get('*', (req, res, next) => {
+    // Skip API routes
+    if (req.path.startsWith('/api/')) {
+      return next();
+    }
+    
+    // Serve index.html for all other routes (client-side routing)
+    res.sendFile(path.join(buildPath, 'index.html'), (err) => {
+      if (err) {
+        console.error('Error serving index.html:', err);
+        res.status(500).send('Error loading application');
+      }
+    });
+  });
+}
+
 (async () => {
   try {
     // Connect to MongoDB Atlas
@@ -68,13 +120,13 @@ app.use((req, res, next) => {
       throw err;
     });
 
-    // importantly only setup vite in development and after
-    // setting up all the other routes so the catch-all route
-    // doesn't interfere with the other routes
+    // Serve static files and handle client-side routing
     if (app.get("env") === "development") {
+      // Development: Use Vite dev server
       await setupVite(app, server);
     } else {
-      serveStatic(app);
+      // Production: Serve React build from dist folder
+      serveStaticFiles(app);
     }
 
     // ALWAYS serve the app on the port specified in the environment variable PORT
@@ -88,7 +140,11 @@ app.use((req, res, next) => {
     }, () => {
       log(`🚀 Server running on port ${port}`);
       log(`📊 MongoDB Status: ${getConnectionStatus() ? '✅ Connected' : '❌ Disconnected'}`);
+      log(`🌐 Environment: ${app.get("env")}`);
       log(`🌐 Admin Dashboard: http://localhost:${port}/admin-login`);
+      if (app.get("env") === "production") {
+        log(`📁 Serving static files from: ${path.join(process.cwd(), 'dist')}`);
+      }
     });
   } catch (error) {
     console.error('❌ Failed to start server:', error);

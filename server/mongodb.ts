@@ -1,7 +1,7 @@
 import mongoose from 'mongoose';
 import { Registration } from './models/Registration.js';
 
-const MONGODB_URI = 'mongodb+srv://sairamMUN:sairam2027@cluster0.uqjjz91.mongodb.net/sairamMUN?retryWrites=true&w=majority&appName=Cluster0&ssl=true&tls=true&tlsAllowInvalidCertificates=true';
+const MONGODB_URI = 'mongodb+srv://sairamMUN:sairam2027@cluster0.uqjjz91.mongodb.net/sairamMUN?retryWrites=true&w=majority&appName=Cluster0';
 
 let isConnected = false;
 
@@ -14,10 +14,16 @@ export async function connectToMongoDB(): Promise<void> {
   try {
     console.log('🔄 Connecting to MongoDB Atlas...');
     
+    // Set Node.js options to handle SSL/TLS issues on Windows
+    process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
+    
     await mongoose.connect(MONGODB_URI, {
       maxPoolSize: 10,
-      serverSelectionTimeoutMS: 15000,
+      serverSelectionTimeoutMS: 20000,
       socketTimeoutMS: 45000,
+      tls: true,
+      tlsAllowInvalidCertificates: true,
+      tlsAllowInvalidHostnames: true,
     });
 
     isConnected = true;
