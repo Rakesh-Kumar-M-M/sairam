@@ -1,22 +1,19 @@
 # Multi-stage build for better caching and smaller final image
 FROM node:18-alpine AS base
 
-# Install system dependencies for native modules
+# Install minimal system dependencies (avoid unnecessary native build tools)
 RUN apk add --no-cache \
     libc6-compat \
-    python3 \
-    make \
-    g++ \
     && rm -rf /var/cache/apk/*
 
 # Set working directory
 WORKDIR /app
 
 # Copy package files first for better caching
-COPY package.json package-lock.json* ./
+COPY package.json package-lock.json* .npmrc ./
 
-# Install dependencies with proper native module support
-RUN npm install --production=false --legacy-peer-deps \
+# Install dependencies with JS-only approach
+RUN npm install --production=false --legacy-peer-deps --omit=optional \
     && npm cache clean --force
 
 # Copy source code
@@ -25,6 +22,8 @@ COPY . .
 # Set build environment
 ENV NODE_ENV=production
 ENV NODE_OPTIONS="--max-old-space-size=4096"
+# Force Rollup to use JS-only version
+ENV ROLLUP_SKIP_NATIVE=true
 
 # Build the application
 RUN npm run build
@@ -42,7 +41,7 @@ COPY --from=base /app/dist ./dist
 COPY --from=base /app/package.json ./package.json
 
 # Install only production dependencies
-RUN npm install --only=production --ignore-scripts \
+RUN npm install --only=production --ignore-scripts --omit=optional \
     && npm cache clean --force \
     && rm -rf /tmp/*
 

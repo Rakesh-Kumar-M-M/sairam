@@ -4,12 +4,9 @@ FROM node:18-alpine AS base
 # Set working directory
 WORKDIR /app
 
-# Install system dependencies for native modules (esbuild, drizzle, tailwind)
+# Install minimal system dependencies (avoid unnecessary native build tools)
 RUN apk add --no-cache \
     libc6-compat \
-    python3 \
-    make \
-    g++ \
     && rm -rf /var/cache/apk/*
 
 # Install dependencies only when needed
@@ -18,9 +15,9 @@ FROM base AS deps
 # Copy package files and npm configuration
 COPY package.json package-lock.json* .npmrc ./
 
-# Install dependencies with proper native module support
-# Using --legacy-peer-deps for better compatibility with complex dependency trees
-RUN npm install --production=false --legacy-peer-deps \
+# Install dependencies with JS-only approach
+# Force omit=optional to prevent native module resolution
+RUN npm install --production=false --legacy-peer-deps --omit=optional \
     && npm cache clean --force
 
 # Rebuild the source code only when needed
@@ -36,11 +33,13 @@ COPY . .
 # Set environment variables for build
 ENV NODE_ENV=production
 ENV NODE_OPTIONS="--max-old-space-size=4096"
+# Force Rollup to use JS-only version
+ENV ROLLUP_SKIP_NATIVE=true
 
-# Build the application with comprehensive error handling
+# Build the application with JS-only approach
 RUN npm run build || (echo "Initial build failed, retrying with clean install..." && \
     rm -rf node_modules && \
-    npm install --production=false --legacy-peer-deps && \
+    npm install --production=false --legacy-peer-deps --omit=optional && \
     npm run build)
 
 # Production image, copy all the files and run the app
@@ -62,7 +61,7 @@ COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/package.json ./package.json
 
 # Install only production dependencies in final image
-RUN npm install --only=production --ignore-scripts \
+RUN npm install --only=production --ignore-scripts --omit=optional \
     && npm cache clean --force \
     && rm -rf /tmp/*
 

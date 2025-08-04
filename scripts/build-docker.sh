@@ -11,6 +11,12 @@ if ! docker info > /dev/null 2>&1; then
     exit 1
 fi
 
+# Set environment variables for JS-only builds
+export ROLLUP_SKIP_NATIVE=true
+export NODE_OPTIONS="--max-old-space-size=4096"
+
+echo "🔧 Using JS-only Rollup builds (no native modules)"
+
 # Build the image
 echo "📦 Building Docker image..."
 docker build -t sairam-mun-website:latest .

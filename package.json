@@ -103,6 +103,16 @@
   "overrides": {
     "rollup": {
       "fsevents": "~2.3.3"
-    }
+    },
+    "vite": {
+      "rollup": {
+        "fsevents": "~2.3.3"
+      }
+    },
+    "@rollup/rollup-linux-x64-musl": "npm:rollup@4.9.0",
+    "@rollup/rollup-linux-x64-gnu": "npm:rollup@4.9.0",
+    "@rollup/rollup-darwin-x64": "npm:rollup@4.9.0",
+    "@rollup/rollup-darwin-arm64": "npm:rollup@4.9.0",
+    "@rollup/rollup-win32-x64-msvc": "npm:rollup@4.9.0"
   }
 }

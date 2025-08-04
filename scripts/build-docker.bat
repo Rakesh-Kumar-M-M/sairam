@@ -8,6 +8,12 @@ if %errorlevel% neq 0 (
     exit /b 1
 )
 
+REM Set environment variables for JS-only builds
+set ROLLUP_SKIP_NATIVE=true
+set NODE_OPTIONS=--max-old-space-size=4096
+
+echo 🔧 Using JS-only Rollup builds (no native modules)
+
 REM Build the image
 echo 📦 Building Docker image...
 docker build -t sairam-mun-website:latest .
