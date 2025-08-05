@@ -113,7 +113,7 @@ registerRoutes(app).then((server) => {
       // Connect to MongoDB
       await connectToMongoDB();
       
-      const preferredPort = parseInt(process.env.PORT || '9999', 10);
+      const preferredPort = parseInt(process.env.PORT || '10000', 10);
       const port = await findAvailablePort(preferredPort);
 
       if (port !== preferredPort) {
