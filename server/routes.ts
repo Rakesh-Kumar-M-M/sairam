@@ -196,6 +196,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Update payment status for a registration
+  app.patch("/api/registrations/:id/payment-status", async (req, res) => {
+    try {
+      const id = req.params.id;
+      const { paymentStatus } = req.body;
+      if (!['pending', 'completed', 'failed'].includes(paymentStatus)) {
+        return res.status(400).json({
+          success: false,
+          message: "Invalid payment status"
+        });
+      }
+      const updated = await mongoStorage.updatePaymentStatus(id, paymentStatus);
+      if (!updated) {
+        return res.status(404).json({
+          success: false,
+          message: "Registration not found"
+        });
+      }
+      res.json({ success: true, registration: updated });
+    } catch (error) {
+      res.status(500).json({
+        success: false,
+        message: "Failed to update payment status"
+      });
+    }
+  });
+
   // Test MongoDB connection endpoint
   app.get("/api/test-mongodb", async (req, res) => {
     try {

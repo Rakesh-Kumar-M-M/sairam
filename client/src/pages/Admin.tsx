@@ -113,7 +113,7 @@ export default function Admin() {
   };
 
   // Fetch registrations
-  const { data: registrations = [], isLoading, error } = useQuery({
+  const { data: registrations = [], isLoading, error, refetch } = useQuery({
     queryKey: ["registrations"],
     queryFn: async () => {
       const response = await apiRequest("GET", "/api/registrations");
@@ -423,24 +423,52 @@ export default function Admin() {
                         </Badge>
                       </TableCell>
                       <TableCell>
-                        <Badge
-                          variant={
-                            registration.paymentStatus === "completed"
-                              ? "default"
-                              : registration.paymentStatus === "pending"
-                              ? "secondary"
-                              : "destructive"
-                          }
-                          className={
-                            registration.paymentStatus === "completed"
-                              ? "bg-green-600 hover:bg-green-700"
-                              : registration.paymentStatus === "pending"
-                              ? "bg-yellow-600 hover:bg-yellow-700"
-                              : "bg-red-600 hover:bg-red-700"
-                          }
+                        <Select
+                          value={registration.paymentStatus}
+                          onValueChange={async (value) => {
+                            try {
+                              const response = await apiRequest(
+                                "PATCH",
+                                `/api/registrations/${registration._id}/payment-status`,
+                                { paymentStatus: value }
+                              );
+                              if (response.ok) {
+                                toast({
+                                  title: "Payment status updated!",
+                                  description: `Status set to ${value}`,
+                                });
+                                refetch(); // Refresh the table data
+                              } else {
+                                toast({
+                                  title: "Failed to update status",
+                                  description: "Please try again.",
+                                  variant: "destructive",
+                                });
+                              }
+                            } catch (err) {
+                              toast({
+                                title: "Error",
+                                description: "Could not update payment status.",
+                                variant: "destructive",
+                              });
+                            }
+                          }}
                         >
-                          {registration.paymentStatus}
-                        </Badge>
+                          <SelectTrigger className={
+                            registration.paymentStatus === "completed"
+                              ? "bg-green-600 text-white"
+                              : registration.paymentStatus === "pending"
+                              ? "bg-yellow-600 text-white"
+                              : "bg-red-600 text-white"
+                          }>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="pending">pending</SelectItem>
+                            <SelectItem value="completed">completed</SelectItem>
+                            <SelectItem value="failed">failed</SelectItem>
+                          </SelectContent>
+                        </Select>
                       </TableCell>
                       <TableCell>
                         {registration.paymentScreenshot ? (
