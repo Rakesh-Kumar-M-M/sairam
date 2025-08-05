@@ -11,5 +11,9 @@ services:
         sync: false
       - key: PORT
         value: 10000
+      - key: FRONTEND_URL
+        value: https://sairam-mun-website.onrender.com
+      - key: RENDER_EXTERNAL_URL
+        value: https://sairam-mun-website.onrender.com
     healthCheckPath: /api/health
     autoDeploy: true 
