@@ -12,9 +12,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import PaymentModal from "@/components/PaymentModal";
 
 export default function Register() {
   const [isRegistered, setIsRegistered] = useState(false);
+  const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
+  const [paymentScreenshot, setPaymentScreenshot] = useState<string | null>(null);
   const { toast } = useToast();
 
   const form = useForm<InsertRegistration>({
@@ -49,9 +52,10 @@ export default function Register() {
       console.log('🎉 Registration successful:', data);
       setIsRegistered(true);
       form.reset();
+      setPaymentScreenshot(null);
       toast({
         title: "Registration Successful!",
-        description: "Thank you for registering. You will receive a confirmation email shortly.",
+        description: "Thank you for registering. Your payment screenshot has been submitted.",
       });
     },
     onError: (error: any) => {
@@ -65,13 +69,45 @@ export default function Register() {
   });
 
   const onSubmit = (data: InsertRegistration) => {
-    registrationMutation.mutate(data);
+    if (!paymentScreenshot) {
+      toast({
+        title: "Payment Required",
+        description: "Please complete the payment process first.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Add payment screenshot to the data
+    const registrationData = {
+      ...data,
+      paymentScreenshot: paymentScreenshot,
+    };
+
+    registrationMutation.mutate(registrationData);
   };
 
   const handlePayment = () => {
+    // Check if form is valid before opening payment modal
+    const isValid = form.formState.isValid;
+    if (!isValid) {
+      toast({
+        title: "Form Incomplete",
+        description: "Please fill in all required fields before proceeding to payment.",
+        variant: "destructive",
+      });
+      form.trigger(); // Trigger validation
+      return;
+    }
+
+    setIsPaymentModalOpen(true);
+  };
+
+  const handlePaymentComplete = (screenshot: string) => {
+    setPaymentScreenshot(screenshot);
     toast({
-      title: "Payment Integration",
-      description: "Payment integration coming soon! Please complete the registration form first.",
+      title: "Payment Completed",
+      description: "Payment screenshot uploaded. You can now complete your registration.",
     });
   };
 
@@ -89,10 +125,13 @@ export default function Register() {
               <CheckCircle className="mx-auto h-16 w-16 text-green-500" />
               <h2 className="text-2xl font-bold text-white">Registration Successful!</h2>
               <p className="text-slate-300">
-                Thank you for registering for Sairam MUN 2025. You will receive a confirmation email shortly with further details.
+                Thank you for registering for Sairam MUN 2025. Your payment screenshot has been submitted and will be verified shortly.
               </p>
               <Button
-                onClick={() => setIsRegistered(false)}
+                onClick={() => {
+                  setIsRegistered(false);
+                  setPaymentScreenshot(null);
+                }}
                 variant="outline"
                 className="border-slate-600 text-white hover:bg-slate-700"
               >
@@ -135,9 +174,9 @@ export default function Register() {
                 {/* Personal Information */}
                 <div className="grid md:grid-cols-2 gap-6">
                   <div className="space-y-2">
-                                         <Label htmlFor="fullName" className="text-slate-300 font-semibold">
-                       Full Name <span className="text-red-500">*</span>
-                     </Label>
+                    <Label htmlFor="fullName" className="text-slate-300 font-semibold">
+                      Full Name <span className="text-red-500">*</span>
+                    </Label>
                     <Input
                       id="fullName"
                       {...form.register("fullName")}
@@ -149,9 +188,9 @@ export default function Register() {
                     )}
                   </div>
                   <div className="space-y-2">
-                                         <Label htmlFor="year" className="text-slate-300 font-semibold">
-                       Year <span className="text-red-500">*</span>
-                     </Label>
+                    <Label htmlFor="year" className="text-slate-300 font-semibold">
+                      Year <span className="text-red-500">*</span>
+                    </Label>
                     <Select onValueChange={(value) => form.setValue("year", value as "I" | "II" | "III" | "IV")}>
                       <SelectTrigger className="bg-slate-900 border-slate-600 text-white focus:border-blue-500 focus:ring-blue-500">
                         <SelectValue placeholder="Select Year" />
@@ -171,9 +210,9 @@ export default function Register() {
 
                 <div className="grid md:grid-cols-2 gap-6">
                   <div className="space-y-2">
-                                         <Label htmlFor="department" className="text-slate-300 font-semibold">
-                       Department <span className="text-red-500">*</span>
-                     </Label>
+                    <Label htmlFor="department" className="text-slate-300 font-semibold">
+                      Department <span className="text-red-500">*</span>
+                    </Label>
                     <Input
                       id="department"
                       {...form.register("department")}
@@ -185,9 +224,9 @@ export default function Register() {
                     )}
                   </div>
                   <div className="space-y-2">
-                                         <Label htmlFor="section" className="text-slate-300 font-semibold">
-                       Section <span className="text-red-500">*</span>
-                     </Label>
+                    <Label htmlFor="section" className="text-slate-300 font-semibold">
+                      Section <span className="text-red-500">*</span>
+                    </Label>
                     <Input
                       id="section"
                       {...form.register("section")}
@@ -202,9 +241,9 @@ export default function Register() {
 
                 <div className="grid md:grid-cols-2 gap-6">
                   <div className="space-y-2">
-                                         <Label htmlFor="secId" className="text-slate-300 font-semibold">
-                       Student ID <span className="text-red-500">*</span>
-                     </Label>
+                    <Label htmlFor="secId" className="text-slate-300 font-semibold">
+                      Student ID <span className="text-red-500">*</span>
+                    </Label>
                     <Input
                       id="secId"
                       {...form.register("secId")}
@@ -216,9 +255,9 @@ export default function Register() {
                     )}
                   </div>
                   <div className="space-y-2">
-                                         <Label htmlFor="college" className="text-slate-300 font-semibold">
-                       College <span className="text-red-500">*</span>
-                     </Label>
+                    <Label htmlFor="college" className="text-slate-300 font-semibold">
+                      College <span className="text-red-500">*</span>
+                    </Label>
                     <Select onValueChange={(value) => form.setValue("college", value)}>
                       <SelectTrigger className="bg-slate-900 border-slate-600 text-white focus:border-blue-500 focus:ring-blue-500">
                         <SelectValue placeholder="Select College" />
@@ -253,21 +292,21 @@ export default function Register() {
                     <Label htmlFor="phoneNumber" className="text-slate-300 font-semibold">
                       Phone Number <span className="text-red-500">*</span>
                     </Label>
-                                         <Input
-                       id="phoneNumber"
-                       {...form.register("phoneNumber")}
-                       placeholder="Mobile number"
-                       maxLength={10}
-                       type="tel"
-                       pattern="[0-9]*"
-                       inputMode="numeric"
-                       onKeyPress={(e) => {
-                         if (!/[0-9]/.test(e.key)) {
-                           e.preventDefault();
-                         }
-                       }}
-                       className="bg-slate-900 border-slate-600 text-white placeholder-slate-400 focus:border-blue-500 focus:ring-blue-500"
-                     />
+                    <Input
+                      id="phoneNumber"
+                      {...form.register("phoneNumber")}
+                      placeholder="Mobile number"
+                      maxLength={10}
+                      type="tel"
+                      pattern="[0-9]*"
+                      inputMode="numeric"
+                      onKeyPress={(e) => {
+                        if (!/[0-9]/.test(e.key)) {
+                          e.preventDefault();
+                        }
+                      }}
+                      className="bg-slate-900 border-slate-600 text-white placeholder-slate-400 focus:border-blue-500 focus:ring-blue-500"
+                    />
                     {form.formState.errors.phoneNumber && (
                       <p className="text-red-400 text-sm">{form.formState.errors.phoneNumber.message}</p>
                     )}
@@ -302,14 +341,33 @@ export default function Register() {
                       <span className="text-slate-300">Conference Registration</span>
                       <span className="text-2xl font-bold text-yellow-500">₹300</span>
                     </div>
-                    <Button
-                      type="button"
-                      onClick={handlePayment}
-                      className="w-full bg-gradient-to-r from-yellow-500 to-blue-600 hover:from-yellow-600 hover:to-blue-700 text-white font-semibold"
-                    >
-                      <CreditCard className="mr-2" size={20} />
-                      Pay Now - ₹300
-                    </Button>
+                    
+                    {paymentScreenshot ? (
+                      <div className="space-y-3">
+                        <div className="flex items-center space-x-2 text-green-400">
+                          <CheckCircle className="h-5 w-5" />
+                          <span className="text-sm">Payment screenshot uploaded</span>
+                        </div>
+                        <Button
+                          type="button"
+                          onClick={() => setIsPaymentModalOpen(true)}
+                          variant="outline"
+                          className="w-full border-green-600 text-green-400 hover:bg-green-600 hover:text-white"
+                        >
+                          <CreditCard className="mr-2" size={20} />
+                          Change Payment Screenshot
+                        </Button>
+                      </div>
+                    ) : (
+                      <Button
+                        type="button"
+                        onClick={handlePayment}
+                        className="w-full bg-gradient-to-r from-yellow-500 to-blue-600 hover:from-yellow-600 hover:to-blue-700 text-white font-semibold"
+                      >
+                        <CreditCard className="mr-2" size={20} />
+                        Pay Now - ₹300
+                      </Button>
+                    )}
                   </CardContent>
                 </Card>
 
@@ -317,18 +375,30 @@ export default function Register() {
                 <div className="pt-4">
                   <Button
                     type="submit"
-                    disabled={registrationMutation.isPending}
+                    disabled={registrationMutation.isPending || !paymentScreenshot}
                     className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold text-lg py-4 hover:shadow-xl hover:scale-[1.02] transition-all duration-200"
                   >
                     <Send className="mr-2" size={20} />
                     {registrationMutation.isPending ? "Registering..." : "Complete Registration"}
                   </Button>
+                  {!paymentScreenshot && (
+                    <p className="text-red-400 text-sm text-center mt-2">
+                      Please complete the payment process to continue
+                    </p>
+                  )}
                 </div>
               </form>
             </CardContent>
           </Card>
         </motion.div>
       </div>
+
+      {/* Payment Modal */}
+      <PaymentModal
+        isOpen={isPaymentModalOpen}
+        onClose={() => setIsPaymentModalOpen(false)}
+        onPaymentComplete={handlePaymentComplete}
+      />
     </motion.section>
   );
 }

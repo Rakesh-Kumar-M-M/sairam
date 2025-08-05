@@ -21,6 +21,7 @@ export const insertRegistrationSchema = z.object({
   committee: z.enum(["UNEP", "UNSC"], {
     errorMap: () => ({ message: "Committee must be UNEP or UNSC" })
   }),
+  paymentScreenshot: z.string().optional(), // Base64 or URL of payment screenshot
 });
 
 // Type definitions
@@ -40,5 +41,6 @@ export interface IRegistration {
   phoneNumber: string;
   committee: 'UNEP' | 'UNSC';
   paymentStatus: 'pending' | 'completed' | 'failed';
+  paymentScreenshot?: string; // Base64 or URL of payment screenshot
   createdAt: Date;
 }

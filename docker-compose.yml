@@ -10,7 +10,8 @@ services:
     environment:
       - NODE_ENV=production
       - PORT=10000
-      - MONGODB_URI=${MONGODB_URI}
+      - MONGODB_URI=mongodb+srv://sairamMUN:sairam2027@cluster0.uqjjz91.mongodb.net/sairamdb?retryWrites=true&w=majority
+
     healthcheck:
       test: ["CMD", "node", "-e", "require('http').get('http://localhost:10000/api/health', (res) => { process.exit(res.statusCode === 200 ? 0 : 1) })"]
       interval: 30s

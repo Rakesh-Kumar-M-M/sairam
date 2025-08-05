@@ -61,6 +61,10 @@ const RegistrationSchema = new Schema<IRegistrationDocument>({
     enum: ['pending', 'completed', 'failed'],
     default: 'pending'
   },
+  paymentScreenshot: {
+    type: String,
+    required: false // Optional field for payment screenshot (base64 or URL)
+  },
   createdAt: {
     type: Date,
     default: Date.now

@@ -55,7 +55,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const validatedData = insertRegistrationSchema.parse(req.body);
       console.log('✅ Data validated successfully:', validatedData);
 
-      const registration = await mongoStorage.createRegistration(validatedData);
+      // Extract payment screenshot if provided
+      const { paymentScreenshot, ...registrationData } = validatedData;
+      
+      // Create registration with payment screenshot and set status to completed if screenshot provided
+      const registration = await mongoStorage.createRegistration({
+        ...registrationData,
+        paymentScreenshot: paymentScreenshot || undefined,
+        paymentStatus: paymentScreenshot ? 'completed' : 'pending'
+      });
+      
       console.log('✅ Registration created successfully:', registration._id);
 
       res.status(201).json({ 
@@ -64,7 +73,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         registration: {
           id: registration._id,
           fullName: registration.fullName,
-          createdAt: registration.createdAt
+          createdAt: registration.createdAt,
+          paymentStatus: registration.paymentStatus
         }
       });
     } catch (error) {
