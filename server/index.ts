@@ -1,5 +1,4 @@
 import express from "express";
-import cors from "cors";
 import path from "path";
 import fs from "fs";
 import dotenv from "dotenv";
@@ -10,50 +9,11 @@ import { connectToMongoDB, getConnectionStatus } from "./mongodb";
 dotenv.config();
 
 const app = express();
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 9999;
 
 // Middleware
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
-
-// CORS configuration
-const corsOptions = {
-  origin: process.env.NODE_ENV === 'production'
-    ? [
-        process.env.FRONTEND_URL,
-        process.env.RENDER_EXTERNAL_URL,
-        'https://sairam-mun-website.onrender.com',
-        'https://your-app-name.onrender.com', // Keep as fallback
-        '*' // Allow all origins in production for now
-      ].filter(Boolean) // Remove undefined values
-    : ['http://localhost:5173', 'http://localhost:5174', 'http://localhost:3000', '*'],
-  credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-  allowedHeaders: ['Origin', 'X-Requested-With', 'Content-Type', 'Accept', 'Authorization']
-};
-
-app.use((req, res, next) => {
-  const origin = req.headers.origin;
-  
-  // Log CORS requests for debugging
-  console.log(`🌐 CORS request from: ${origin}`);
-  console.log(`🔧 Allowed origins: ${corsOptions.origin.join(', ')}`);
-  
-  // More permissive CORS handling
-  if (origin) {
-    res.header('Access-Control-Allow-Origin', origin);
-  } else {
-    res.header('Access-Control-Allow-Origin', '*');
-  }
-  res.header('Access-Control-Allow-Methods', corsOptions.methods.join(', '));
-  res.header('Access-Control-Allow-Headers', corsOptions.allowedHeaders.join(', '));
-  res.header('Access-Control-Allow-Credentials', 'true');
-  if (req.method === 'OPTIONS') {
-    res.sendStatus(200);
-  } else {
-    next();
-  }
-});
 
 // Function to find an available port
 async function findAvailablePort(startPort: number): Promise<number> {
@@ -153,7 +113,7 @@ registerRoutes(app).then((server) => {
       // Connect to MongoDB
       await connectToMongoDB();
       
-      const preferredPort = parseInt(process.env.PORT || '5000', 10);
+      const preferredPort = parseInt(process.env.PORT || '9999', 10);
       const port = await findAvailablePort(preferredPort);
 
       if (port !== preferredPort) {
@@ -162,7 +122,7 @@ registerRoutes(app).then((server) => {
 
       server.listen({
         port,
-        host: process.env.NODE_ENV === 'production' ? '0.0.0.0' : 'localhost',
+        host: '0.0.0.0', // Always bind to all interfaces
       }, () => {
         console.log(`🚀 Server running on port ${port}`);
         console.log(`📊 MongoDB Status: ${getConnectionStatus() ? '✅ Connected' : '❌ Disconnected'}`);

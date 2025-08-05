@@ -87,28 +87,31 @@ export function Footer() {
         
         {/* Bottom Line */}
         <div className="border-t border-slate-700 mt-12 pt-8 text-center">
-          <div className="flex items-center justify-center space-x-4">
-            <p className="text-slate-400">
-              © Designed and Developed by MUN Web Development Team.
-            </p>
-            <div className="flex items-center space-x-2">
-              <img
-                src="/assets/sree.jpg"
-                alt="Sree"
-                className="w-8 h-8 rounded-full object-cover border-2 border-slate-600 shadow-sm"
-              />
-              <img
-                src="/assets/harini.png"
-                alt="Harini"
-                className="w-8 h-8 rounded-full object-cover border-2 border-slate-600 shadow-sm"
-              />
-              <img
-                src="/assets/rakesh.png"
-                alt="Rakesh"
-                className="w-8 h-8 rounded-full object-cover border-2 border-slate-600 shadow-sm"
-                style={{ objectPosition: 'center top' }}
-              />
-            </div>
+          <p className="text-slate-400 mb-4">
+            © Designed and Developed by MUN Web Development Team.
+          </p>
+          <div className="flex items-center justify-center space-x-2">
+            <img
+              src="/assets/sree.jpg"
+              alt="Sree"
+              className="w-8 h-8 rounded-full object-cover border-2 border-slate-600 shadow-sm"
+            />
+            <img
+              src="/assets/yuva.png"
+              alt="Yuva"
+              className="w-8 h-8 rounded-full object-cover border-2 border-slate-600 shadow-sm"
+            />
+            <img
+              src="/assets/harini.png"
+              alt="Harini"
+              className="w-8 h-8 rounded-full object-cover border-2 border-slate-600 shadow-sm"
+            />
+            <img
+              src="/assets/rakesh.png"
+              alt="Rakesh"
+              className="w-8 h-8 rounded-full object-cover border-2 border-slate-600 shadow-sm"
+              style={{ objectPosition: 'center top' }}
+            />
           </div>
         </div>
       </div>
