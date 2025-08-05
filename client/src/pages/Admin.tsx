@@ -156,16 +156,15 @@ export default function Admin() {
   const isMongoConnected = healthStatus?.success && healthStatus?.mongodb === "connected";
 
   const handleExportCSV = () => {
-    const headers = ["ID", "Full Name", "Year", "Department", "Section", "Student ID", "College", "Preferred Country", "Phone Number", "Committee", "Payment Status", "Registration Date"];
+    const headers = ["Student ID", "Full Name", "Year", "Department", "Section", "College", "Preferred Country", "Phone Number", "Committee", "Payment Status", "Registration Date"];
     const csvContent = [
       headers.join(","),
       ...filteredRegistrations.map((reg: Registration) => [
-        reg._id,
+        reg.secId,
         reg.fullName,
         reg.year,
         reg.department,
         reg.section,
-        reg.secId,
         reg.college,
         reg.preferredCountry,
         reg.phoneNumber,
@@ -307,7 +306,7 @@ export default function Admin() {
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 h-4 w-4" />
               <Input
-                placeholder="Search by name, ID, or phone..."
+                placeholder="Search by name, student ID, or phone..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-10 bg-slate-900 border-slate-600 text-white placeholder-slate-400"
@@ -394,7 +393,7 @@ export default function Admin() {
               <Table>
                 <TableHeader>
                   <TableRow className="border-slate-700">
-                    <TableHead className="text-slate-300">ID</TableHead>
+                    <TableHead className="text-slate-300">Student ID</TableHead>
                     <TableHead className="text-slate-300">Name</TableHead>
                     <TableHead className="text-slate-300">Year</TableHead>
                     <TableHead className="text-slate-300">Department</TableHead>
@@ -409,7 +408,7 @@ export default function Admin() {
                 <TableBody>
                   {filteredRegistrations.map((registration: Registration) => (
                     <TableRow key={registration._id} className="border-slate-700 hover:bg-slate-700/50">
-                      <TableCell className="text-slate-300">{registration._id.slice(-6)}</TableCell>
+                      <TableCell className="text-slate-300">{registration.secId}</TableCell>
                       <TableCell className="text-white font-medium">{registration.fullName}</TableCell>
                       <TableCell className="text-slate-300">{registration.year}</TableCell>
                       <TableCell className="text-slate-300">{registration.department}</TableCell>
