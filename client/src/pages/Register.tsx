@@ -77,13 +77,11 @@ export default function Register() {
       });
       return;
     }
-
-    // Add payment screenshot to the data
+    // Add payment screenshot URL to the data
     const registrationData = {
       ...data,
-      paymentScreenshot: paymentScreenshot,
+      paymentScreenshot: paymentScreenshot, // This is now a URL
     };
-
     registrationMutation.mutate(registrationData);
   };
 
@@ -103,8 +101,8 @@ export default function Register() {
     setIsPaymentModalOpen(true);
   };
 
-  const handlePaymentComplete = (screenshot: string) => {
-    setPaymentScreenshot(screenshot);
+  const handlePaymentComplete = (screenshotUrl: string) => {
+    setPaymentScreenshot(screenshotUrl); // Now a URL
     toast({
       title: "Payment Completed",
       description: "Payment screenshot uploaded. You can now complete your registration.",

@@ -4,6 +4,14 @@ import { mongoStorage } from "./mongoStorage";
 import { insertRegistrationSchema } from "@shared/schema";
 import { z } from "zod";
 import mongoose from "mongoose";
+import multer from "multer";
+import path from "path";
+import fs from "fs";
+import express from "express";
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Health check endpoint with detailed MongoDB status
@@ -41,6 +49,53 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
     }
   });
+
+  // Ensure upload directory exists
+  const uploadDir = path.join(__dirname, "..", "uploads", "screenshots");
+  if (!fs.existsSync(uploadDir)) {
+    fs.mkdirSync(uploadDir, { recursive: true });
+  }
+
+  const storage = multer.diskStorage({
+    destination: function (req, file, cb) {
+      cb(null, uploadDir);
+    },
+    filename: function (req, file, cb) {
+      const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
+      cb(null, uniqueSuffix + path.extname(file.originalname));
+    },
+  });
+  const upload = multer({
+    storage: storage,
+    fileFilter: (req, file, cb) => {
+      const allowedTypes = ["image/jpeg", "image/png"];
+      if (!allowedTypes.includes(file.mimetype)) {
+        return cb(new Error("Only JPG and PNG images are allowed"));
+      }
+      cb(null, true);
+    },
+    limits: { fileSize: 5 * 1024 * 1024 }, // 5MB
+  });
+
+  // File upload endpoint
+  app.post("/api/upload-screenshot", (req, res, next) => {
+    upload.single("screenshot")(req, res, function (err) {
+      if (err) {
+        if (err instanceof multer.MulterError && err.code === "LIMIT_FILE_SIZE") {
+          return res.status(400).json({ success: false, message: "File too large. Max size is 5MB." });
+        }
+        return res.status(400).json({ success: false, message: err.message || "Invalid file upload." });
+      }
+      if (!req.file) {
+        return res.status(400).json({ success: false, message: "No file uploaded" });
+      }
+      const fileUrl = `/uploads/screenshots/${req.file.filename}`;
+      res.json({ success: true, url: fileUrl });
+    });
+  });
+
+  // Serve uploads as static files
+  app.use("/uploads", express.static(path.join(__dirname, "..", "uploads")));
 
   // Registration endpoint
   app.post("/api/registrations", async (req, res) => {
