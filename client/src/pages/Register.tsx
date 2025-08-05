@@ -90,13 +90,30 @@ export default function Register() {
   const handlePayment = () => {
     // Check if form is valid before opening payment modal
     const isValid = form.formState.isValid;
-    if (!isValid) {
+    const hasErrors = Object.keys(form.formState.errors).length > 0;
+    
+    if (!isValid || hasErrors) {
       toast({
         title: "Form Incomplete",
         description: "Please fill in all required fields before proceeding to payment.",
         variant: "destructive",
       });
-      form.trigger(); // Trigger validation
+      // Trigger validation for all fields
+      form.trigger();
+      return;
+    }
+
+    // Additional check for required fields
+    const values = form.getValues();
+    const requiredFields = ['fullName', 'year', 'department', 'section', 'secId', 'college', 'preferredCountry', 'phoneNumber', 'committee'];
+    const missingFields = requiredFields.filter(field => !values[field as keyof typeof values]);
+    
+    if (missingFields.length > 0) {
+      toast({
+        title: "Missing Required Fields",
+        description: `Please fill in: ${missingFields.join(', ')}`,
+        variant: "destructive",
+      });
       return;
     }
 

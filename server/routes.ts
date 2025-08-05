@@ -55,15 +55,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const validatedData = insertRegistrationSchema.parse(req.body);
       console.log('✅ Data validated successfully:', validatedData);
 
-      // Extract payment screenshot if provided
-      const { paymentScreenshot, ...registrationData } = validatedData;
-      
-      // Create registration with payment screenshot and set status to completed if screenshot provided
-      const registration = await mongoStorage.createRegistration({
-        ...registrationData,
-        paymentScreenshot: paymentScreenshot || undefined,
-        paymentStatus: paymentScreenshot ? 'completed' : 'pending'
-      });
+      // Create registration - the method will handle payment status based on screenshot
+      const registration = await mongoStorage.createRegistration(validatedData);
       
       console.log('✅ Registration created successfully:', registration._id);
 
@@ -263,25 +256,45 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Admin authentication endpoint
   app.post("/api/admin/login", async (req, res) => {
     try {
+      console.log('🔐 Admin login attempt:', {
+        body: req.body,
+        headers: req.headers,
+        origin: req.headers.origin,
+        timestamp: new Date().toISOString()
+      });
+
       const { username, password } = req.body;
+      
+      // Validate input
+      if (!username || !password) {
+        console.log('❌ Admin login failed: Missing credentials');
+        return res.status(400).json({ 
+          success: false, 
+          message: "Username and password are required" 
+        });
+      }
       
       // Simple authentication with fixed credentials
       if (username === "administration" && password === "SAIRAMMUN2025") {
+        console.log('✅ Admin login successful:', { username, timestamp: new Date().toISOString() });
         res.json({ 
           success: true, 
           message: "Login successful",
           admin: { username }
         });
       } else {
+        console.log('❌ Admin login failed: Invalid credentials', { username });
         res.status(401).json({ 
           success: false, 
           message: "Invalid credentials" 
         });
       }
     } catch (error) {
+      console.error('❌ Admin login error:', error);
       res.status(500).json({ 
         success: false, 
-        message: "Login failed" 
+        message: "Login failed",
+        error: process.env.NODE_ENV === 'development' ? error.message : undefined
       });
     }
   });

@@ -26,16 +26,21 @@ export class MongoStorage implements IMongoStorage {
     try {
       console.log('📝 Creating registration with data:', registrationData);
       
+      // Extract payment screenshot and determine payment status
+      const { paymentScreenshot, ...otherData } = registrationData;
+      const paymentStatus = paymentScreenshot ? 'completed' : 'pending';
+      
       const registration = new Registration({
-        ...registrationData,
-        paymentStatus: 'pending',
+        ...otherData,
+        paymentScreenshot: paymentScreenshot || undefined,
+        paymentStatus,
         createdAt: new Date()
       });
       
       console.log('📝 Registration model created:', registration);
       
       const savedRegistration = await registration.save();
-      console.log(`✅ Created new registration: ${savedRegistration.fullName} (ID: ${savedRegistration._id})`);
+      console.log(`✅ Created new registration: ${savedRegistration.fullName} (ID: ${savedRegistration._id}) with payment status: ${savedRegistration.paymentStatus}`);
       return savedRegistration;
     } catch (error) {
       console.error('❌ Error creating registration:', {
