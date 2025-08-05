@@ -541,11 +541,13 @@ export default function Admin() {
                 </Button>
               </div>
               <div className="p-4">
-                <img
-                  src={selectedScreenshot}
-                  alt="Payment Screenshot"
-                  className="w-full h-auto rounded-lg"
-                />
+                {selectedScreenshot.startsWith('/uploads/') ? (
+                  <img src={selectedScreenshot} alt="Payment Screenshot" className="w-full h-auto rounded-lg" />
+                ) : selectedScreenshot.startsWith('data:image/') ? (
+                  <img src={selectedScreenshot} alt="Payment Screenshot" className="w-full h-auto rounded-lg" />
+                ) : (
+                  <span className="text-slate-500 text-sm">No screenshot available</span>
+                )}
               </div>
             </motion.div>
           </motion.div>

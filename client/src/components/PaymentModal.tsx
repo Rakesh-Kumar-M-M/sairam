@@ -19,7 +19,7 @@ export default function PaymentModal({ isOpen, onClose, onPaymentComplete }: Pay
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
 
-  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
 
@@ -44,28 +44,36 @@ export default function PaymentModal({ isOpen, onClose, onPaymentComplete }: Pay
     }
 
     setIsUploading(true);
-    const reader = new FileReader();
-    
-    reader.onload = (e) => {
-      const result = e.target?.result as string;
-      setScreenshot(result);
-      setIsUploading(false);
-      toast({
-        title: "Screenshot Uploaded",
-        description: "Payment screenshot uploaded successfully!",
+    try {
+      const formData = new FormData();
+      formData.append("screenshot", file);
+      const response = await fetch("/api/upload-screenshot", {
+        method: "POST",
+        body: formData,
       });
-    };
-
-    reader.onerror = () => {
-      setIsUploading(false);
+      const data = await response.json();
+      if (data.success && data.url) {
+        setScreenshot(data.url);
+        toast({
+          title: "Screenshot Uploaded",
+          description: "Payment screenshot uploaded successfully!",
+        });
+      } else {
+        toast({
+          title: "Upload Failed",
+          description: data.message || "Failed to upload screenshot. Please try again.",
+          variant: "destructive",
+        });
+      }
+    } catch (err) {
       toast({
         title: "Upload Failed",
         description: "Failed to upload screenshot. Please try again.",
         variant: "destructive",
       });
-    };
-
-    reader.readAsDataURL(file);
+    } finally {
+      setIsUploading(false);
+    }
   };
 
   const handleCompletePayment = () => {
@@ -77,8 +85,7 @@ export default function PaymentModal({ isOpen, onClose, onPaymentComplete }: Pay
       });
       return;
     }
-
-    onPaymentComplete(screenshot);
+    onPaymentComplete(screenshot); // screenshot is now a URL
     onClose();
   };
 
