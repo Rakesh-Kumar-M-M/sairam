@@ -117,7 +117,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const registration = await mongoStorage.createRegistration({
         ...registrationData,
         paymentScreenshot: paymentScreenshot || undefined,
-        paymentStatus: paymentScreenshot ? 'completed' : 'pending'
+        paymentStatus: 'pending'
       });
       
       console.log('✅ Registration created successfully:', registration._id);

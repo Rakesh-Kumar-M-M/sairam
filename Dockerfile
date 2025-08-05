@@ -15,7 +15,7 @@ ENV ROLLUP_NO_NATIVE=1
 ENV ROLLUP_SKIP_NATIVE=true
 
 # Install dependencies (allow optional dependencies to avoid musl issues)
-RUN npm install --production=false --legacy-peer-deps \
+RUN npm install --production=false --legacy-peer-deps multer@latest \
     && npm cache clean --force
 
 # Rebuild the source code only when needed
@@ -59,7 +59,7 @@ COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/package.json ./package.json
 
 # Install only production dependencies in final image
-RUN npm install --only=production --ignore-scripts \
+RUN npm install --only=production --ignore-scripts multer@latest \
     && npm cache clean --force \
     && rm -rf /tmp/*
 
