@@ -110,7 +110,7 @@ registerRoutes(app).then((server) => {
   // Serve static files (both development and production)
   const staticPath = serveStaticFiles();
   
-  // Handle client-side routing (both development and production)
+  // Handle client-side routing (SPA fallback)
   if (staticPath) {
     app.get('*', (req, res) => {
       // Skip API routes
@@ -118,13 +118,28 @@ registerRoutes(app).then((server) => {
         return res.status(404).json({ error: 'API endpoint not found' });
       }
       
+      // Log admin route access for debugging
+      if (req.path.startsWith('/admin')) {
+        console.log(`🔐 Admin route accessed: ${req.path} from ${req.ip}`);
+      }
+      
       const indexPath = path.join(staticPath, 'index.html');
       
       if (fs.existsSync(indexPath)) {
+        console.log(`📄 Serving index.html for route: ${req.path}`);
         res.sendFile(indexPath);
       } else {
+        console.error(`❌ index.html not found at: ${indexPath}`);
         res.status(404).json({ error: 'index.html not found' });
       }
+    });
+  } else {
+    // Fallback for when no static files are available
+    app.get('*', (req, res) => {
+      if (req.path.startsWith('/api/')) {
+        return res.status(404).json({ error: 'API endpoint not found' });
+      }
+      res.status(404).json({ error: 'Static files not available' });
     });
   }
 

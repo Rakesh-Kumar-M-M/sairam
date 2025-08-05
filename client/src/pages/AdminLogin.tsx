@@ -22,17 +22,26 @@ export default function AdminLogin() {
     setIsLoading(true);
 
     try {
+      console.log("🔐 Admin login attempt:", { username, timestamp: new Date().toISOString() });
+      
       const response = await apiRequest("POST", "/api/admin/login", { username, password });
       const data = await response.json();
       
+      console.log("🔐 Admin login response:", { success: data.success, timestamp: new Date().toISOString() });
+      
       if (data.success) {
         localStorage.setItem("adminAuthenticated", "true");
+        localStorage.setItem("adminLoginTime", new Date().toISOString());
+        console.log("✅ Admin login successful:", { username, timestamp: new Date().toISOString() });
+        
         toast({
           title: "Login Successful",
           description: "Welcome to the admin dashboard!",
         });
         setLocation("/admin");
       } else {
+        console.warn("❌ Admin login failed:", { username, message: data.message, timestamp: new Date().toISOString() });
+        
         toast({
           title: "Login Failed",
           description: data.message || "Invalid username or password.",
@@ -40,9 +49,15 @@ export default function AdminLogin() {
         });
       }
     } catch (error) {
+      console.error("❌ Admin login error:", { 
+        username, 
+        error: error instanceof Error ? error.message : 'Unknown error',
+        timestamp: new Date().toISOString() 
+      });
+      
       toast({
         title: "Login Failed",
-        description: "An error occurred during login.",
+        description: "An error occurred during login. Please check your connection and try again.",
         variant: "destructive",
       });
     }

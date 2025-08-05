@@ -40,13 +40,47 @@ export default function Admin() {
   // Check authentication
   useEffect(() => {
     const isAuthenticated = localStorage.getItem("adminAuthenticated");
+    const loginTime = localStorage.getItem("adminLoginTime");
+    
+    console.log("🔐 Admin auth check:", { 
+      isAuthenticated, 
+      loginTime, 
+      timestamp: new Date().toISOString() 
+    });
+    
     if (!isAuthenticated) {
+      console.log("❌ Admin not authenticated, redirecting to login");
       setLocation("/admin-login");
+      return;
     }
-  }, [setLocation]);
+    
+    // Check if login is expired (24 hours)
+    if (loginTime) {
+      const loginDate = new Date(loginTime);
+      const now = new Date();
+      const hoursSinceLogin = (now.getTime() - loginDate.getTime()) / (1000 * 60 * 60);
+      
+      if (hoursSinceLogin > 24) {
+        console.log("⏰ Admin session expired, redirecting to login");
+        localStorage.removeItem("adminAuthenticated");
+        localStorage.removeItem("adminLoginTime");
+        toast({
+          title: "Session Expired",
+          description: "Your admin session has expired. Please login again.",
+          variant: "destructive",
+        });
+        setLocation("/admin-login");
+        return;
+      }
+    }
+    
+    console.log("✅ Admin authentication valid");
+  }, [setLocation, toast]);
 
   const handleLogout = () => {
+    console.log("🚪 Admin logout initiated");
     localStorage.removeItem("adminAuthenticated");
+    localStorage.removeItem("adminLoginTime");
     toast({
       title: "Logged Out",
       description: "You have been successfully logged out.",
