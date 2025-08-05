@@ -9,7 +9,7 @@ import { connectToMongoDB, getConnectionStatus } from "./mongodb";
 dotenv.config();
 
 const app = express();
-const PORT = process.env.PORT || 9999;
+const PORT = process.env.PORT || 10000;
 
 // Middleware
 app.use(express.json({ limit: '10mb' }));
