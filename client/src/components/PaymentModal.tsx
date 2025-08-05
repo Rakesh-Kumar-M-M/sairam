@@ -6,6 +6,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { Label } from "@/components/ui/label";
 
+// Import the QR code image using Vite's asset handling
+import qrCodeImage from "/assets/sushil1rs.jpg?url";
+
 interface PaymentModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -141,7 +144,7 @@ export default function PaymentModal({ isOpen, onClose, onPaymentComplete }: Pay
                 <div className="bg-white p-4 rounded-lg inline-block">
                   {!imageError ? (
                     <img 
-                      src="/assets/sushil1rs.jpg" 
+                      src={qrCodeImage} 
                       alt="UPI QR Code" 
                       className="h-32 w-32 object-cover rounded"
                       onError={(e) => {
