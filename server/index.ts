@@ -23,9 +23,10 @@ const corsOptions = {
         process.env.FRONTEND_URL,
         process.env.RENDER_EXTERNAL_URL,
         'https://sairam-mun-website.onrender.com',
-        'https://your-app-name.onrender.com' // Keep as fallback
+        'https://your-app-name.onrender.com', // Keep as fallback
+        '*' // Allow all origins in production for now
       ].filter(Boolean) // Remove undefined values
-    : ['http://localhost:5173', 'http://localhost:5174', 'http://localhost:3000'],
+    : ['http://localhost:5173', 'http://localhost:5174', 'http://localhost:3000', '*'],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
   allowedHeaders: ['Origin', 'X-Requested-With', 'Content-Type', 'Accept', 'Authorization']
@@ -38,8 +39,11 @@ app.use((req, res, next) => {
   console.log(`🌐 CORS request from: ${origin}`);
   console.log(`🔧 Allowed origins: ${corsOptions.origin.join(', ')}`);
   
-  if (corsOptions.origin.includes(origin as string) || corsOptions.origin.includes('*')) {
+  // More permissive CORS handling
+  if (origin) {
     res.header('Access-Control-Allow-Origin', origin);
+  } else {
+    res.header('Access-Control-Allow-Origin', '*');
   }
   res.header('Access-Control-Allow-Methods', corsOptions.methods.join(', '));
   res.header('Access-Control-Allow-Headers', corsOptions.allowedHeaders.join(', '));
