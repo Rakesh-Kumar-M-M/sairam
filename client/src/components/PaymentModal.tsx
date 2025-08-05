@@ -1,13 +1,10 @@
 import { useState, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Upload, QrCode, Smartphone, Download } from "lucide-react";
+import { X, Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { Label } from "@/components/ui/label";
-
-// Import the QR code image using Vite's asset handling
-import qrCodeImage from "/assets/sushil1rs.jpg?url";
 
 interface PaymentModalProps {
   isOpen: boolean;
@@ -21,10 +18,6 @@ export default function PaymentModal({ isOpen, onClose, onPaymentComplete }: Pay
   const [imageError, setImageError] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
-
-  const upiId = "7845600485@sbi";
-  const amount = "300";
-  const upiDeepLink = `upi://pay?pa=${upiId}&pn=SairamMUN&am=${amount}&cu=INR`;
 
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -73,19 +66,6 @@ export default function PaymentModal({ isOpen, onClose, onPaymentComplete }: Pay
     };
 
     reader.readAsDataURL(file);
-  };
-
-  const handleUPIClick = () => {
-    // Try to open UPI app
-    window.location.href = upiDeepLink;
-    
-    // Fallback: Copy UPI ID to clipboard
-    navigator.clipboard.writeText(upiId).then(() => {
-      toast({
-        title: "UPI ID Copied",
-        description: "UPI ID copied to clipboard. Please paste it in your UPI app.",
-      });
-    });
   };
 
   const handleCompletePayment = () => {
@@ -139,44 +119,32 @@ export default function PaymentModal({ isOpen, onClose, onPaymentComplete }: Pay
             </CardHeader>
 
             <CardContent className="space-y-6">
-              {/* QR Code Section */}
-              <div className="text-center space-y-4">
-                <div className="bg-white p-4 rounded-lg inline-block">
-                  {!imageError ? (
-                    <img 
-                      src={qrCodeImage} 
-                      alt="UPI QR Code" 
-                      className="h-32 w-32 object-cover rounded"
-                      onError={(e) => {
-                        console.error('Failed to load QR code image:', e);
-                        setImageError(true);
-                        toast({
-                          title: "QR Code Image Error",
-                          description: "Could not load QR code image. Please use the UPI button below.",
-                          variant: "destructive",
-                        });
-                      }}
-                      onLoad={() => {
-                        console.log('QR code image loaded successfully');
-                        setImageError(false);
-                      }}
-                    />
-                  ) : (
-                    <QrCode className="h-32 w-32 text-slate-800" />
-                  )}
-                  <p className="text-xs text-slate-600 mt-2">Scan to pay ₹300</p>
-                </div>
-                
-                <div className="space-y-2">
-                  <p className="text-slate-300 text-sm">Scan QR code or click below to pay</p>
-                  <Button
-                    onClick={handleUPIClick}
-                    className="w-full bg-green-600 hover:bg-green-700 text-white"
-                  >
-                    <Smartphone className="mr-2 h-4 w-4" />
-                    Pay with UPI: {upiId}
-                  </Button>
-                </div>
+              {/* Bank Details Table */}
+              <div className="overflow-x-auto">
+                <table className="min-w-full bg-white rounded-lg shadow text-slate-800">
+                  <tbody>
+                    <tr>
+                      <td className="font-semibold px-4 py-2">Account Number</td>
+                      <td className="px-4 py-2">500101012193121</td>
+                    </tr>
+                    <tr>
+                      <td className="font-semibold px-4 py-2">IFSC Code</td>
+                      <td className="px-4 py-2">CIUB0000634</td>
+                    </tr>
+                    <tr>
+                      <td className="font-semibold px-4 py-2">Account Holder</td>
+                      <td className="px-4 py-2">SAI MAGNICON</td>
+                    </tr>
+                    <tr>
+                      <td className="font-semibold px-4 py-2">Bank Name</td>
+                      <td className="px-4 py-2">CITY UNION BANK</td>
+                    </tr>
+                    <tr>
+                      <td className="font-semibold px-4 py-2">Branch Name</td>
+                      <td className="px-4 py-2">POONTHANDALAM BRANCH</td>
+                    </tr>
+                  </tbody>
+                </table>
               </div>
 
               {/* Payment Instructions */}
@@ -184,11 +152,10 @@ export default function PaymentModal({ isOpen, onClose, onPaymentComplete }: Pay
                 <CardContent className="p-4">
                   <h4 className="text-white font-semibold mb-2">Payment Instructions:</h4>
                   <ol className="text-slate-300 text-sm space-y-1">
-                    <li>1. Scan the QR code or click the UPI button above</li>
-                    <li>2. Complete the payment of ₹300</li>
-                    <li>3. Take a screenshot of the payment confirmation</li>
-                    <li>4. Upload the screenshot below</li>
-                    <li>5. Click "Complete Registration"</li>
+                    <li>1. Complete the payment of ₹300 using your preferred method</li>
+                    <li>2. Take a screenshot of the payment confirmation</li>
+                    <li>3. Upload the screenshot below</li>
+                    <li>4. Click "Complete Registration"</li>
                   </ol>
                 </CardContent>
               </Card>
@@ -199,7 +166,6 @@ export default function PaymentModal({ isOpen, onClose, onPaymentComplete }: Pay
                   <Label className="text-slate-300 font-semibold">
                     Upload Payment Screenshot <span className="text-red-500">*</span>
                   </Label>
-                  
                   {!screenshot ? (
                     <div className="border-2 border-dashed border-slate-600 rounded-lg p-6 text-center">
                       <Upload className="mx-auto h-8 w-8 text-slate-400 mb-2" />
