@@ -63,7 +63,7 @@ export default function Home() {
             </p>
             <p className="text-lg flex items-center justify-center gap-2">
               <Calendar className="text-yellow-500" size={20} />
-              September 3-4, 2025
+              September 8-9, 2025
             </p>
           </div>
           
