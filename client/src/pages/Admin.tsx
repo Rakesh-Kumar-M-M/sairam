@@ -11,6 +11,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import RegistrationStatusToggle from "@/components/RegistrationStatusToggle";
 
 interface Registration {
   _id: string;
@@ -293,6 +294,21 @@ export default function Admin() {
               </div>
             </CardContent>
           </Card>
+        </motion.div>
+
+        {/* Registration Status Management */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.15 }}
+          className="bg-slate-800 border border-slate-700 rounded-lg p-6 mb-8"
+        >
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-xl font-semibold text-white">Registration Status Control</h3>
+            <div className="flex items-center gap-3">
+              <RegistrationStatusToggle />
+            </div>
+          </div>
         </motion.div>
 
         {/* Filters and Search */}

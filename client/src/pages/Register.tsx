@@ -3,22 +3,27 @@ import { motion } from "framer-motion";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
-import { CreditCard, Send, CheckCircle } from "lucide-react";
+import { CreditCard, Send, CheckCircle, AlertCircle } from "lucide-react";
 import { insertRegistrationSchema, type InsertRegistration } from "@shared/schema";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { useRegistrationStatus } from "@/hooks/use-registration-status";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import PaymentModal from "@/components/PaymentModal";
+import RegistrationClosedModal from "@/components/RegistrationClosedModal";
 
 export default function Register() {
   const [isRegistered, setIsRegistered] = useState(false);
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
   const [paymentScreenshot, setPaymentScreenshot] = useState<string | null>(null);
   const { toast } = useToast();
+  
+  // Check registration status
+  const { isRegistrationOpen, status, isLoading: isStatusLoading } = useRegistrationStatus();
 
   const form = useForm<InsertRegistration>({
     resolver: zodResolver(insertRegistrationSchema),
@@ -69,6 +74,16 @@ export default function Register() {
   });
 
   const onSubmit = (data: InsertRegistration) => {
+    // Check if registration is open
+    if (!isRegistrationOpen) {
+      toast({
+        title: "Registration Closed",
+        description: "Registration is currently closed. Please check back later.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     if (!paymentScreenshot) {
       toast({
         title: "Payment Required",
@@ -86,6 +101,16 @@ export default function Register() {
   };
 
   const handlePayment = () => {
+    // Check if registration is open
+    if (!isRegistrationOpen) {
+      toast({
+        title: "Registration Closed",
+        description: "Registration is currently closed. Please check back later.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     // Check if form is valid before opening payment modal
     const isValid = form.formState.isValid;
     const hasErrors = Object.keys(form.formState.errors).length > 0;
@@ -185,7 +210,35 @@ export default function Register() {
         >
           <Card className="bg-slate-800 border-slate-700 shadow-2xl">
             <CardContent className="p-8">
-              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+              {/* Registration Status Check */}
+              {isStatusLoading && (
+                <div className="text-center py-8">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto mb-4"></div>
+                  <p className="text-slate-300">Checking registration status...</p>
+                </div>
+              )}
+              
+              {!isStatusLoading && !isRegistrationOpen && (
+                <div className="text-center py-8">
+                  <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <AlertCircle size={32} className="text-red-600" />
+                  </div>
+                  <h3 className="text-xl font-semibold text-red-400 mb-2">Registration Closed</h3>
+                  <p className="text-slate-300 mb-4">
+                    {status?.message || "Registration for Sairam MUN 2025 is currently closed. Please check back later for updates."}
+                  </p>
+                  <Button
+                    onClick={() => window.location.href = '/'}
+                    variant="outline"
+                    className="border-slate-600 text-white hover:bg-slate-700"
+                  >
+                    Back to Home
+                  </Button>
+                </div>
+              )}
+              
+              {!isStatusLoading && isRegistrationOpen && (
+                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
                 {/* Personal Information */}
                 <div className="grid md:grid-cols-2 gap-6">
                   <div className="space-y-2">
@@ -403,6 +456,7 @@ export default function Register() {
                   )}
                 </div>
               </form>
+              )}
             </CardContent>
           </Card>
         </motion.div>
@@ -413,6 +467,13 @@ export default function Register() {
         isOpen={isPaymentModalOpen}
         onClose={() => setIsPaymentModalOpen(false)}
         onPaymentComplete={handlePaymentComplete}
+      />
+
+      {/* Registration Closed Modal */}
+      <RegistrationClosedModal
+        isOpen={!isRegistrationOpen && !isStatusLoading}
+        onClose={() => {}} // No action on close, just hide
+        message={status?.message}
       />
     </motion.section>
   );

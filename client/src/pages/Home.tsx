@@ -1,11 +1,14 @@
 import { motion } from "framer-motion";
 import { Link } from "wouter";
-import { MapPin, Calendar } from "lucide-react";
+import { MapPin, Calendar, AlertCircle } from "lucide-react";
 import { CountdownTimer } from "@/components/CountdownTimer";
 import { CardCarousel } from "@/components/CardCarousel";
 import { Button } from "@/components/ui/button";
+import { useRegistrationStatus } from "@/hooks/use-registration-status";
 
 export default function Home() {
+  const { isRegistrationOpen, status, isLoading: isStatusLoading } = useRegistrationStatus();
+
   return (
     <motion.main
       initial={{ opacity: 0 }}
@@ -68,14 +71,62 @@ export default function Home() {
           </div>
           
           <div className="mb-8">
-            <Link href="/register">
-              <Button
-                size="lg"
-                className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold text-lg px-8 py-4 rounded-xl hover:shadow-2xl hover:scale-105 transition-all duration-300"
-              >
-                Register Now
-              </Button>
-            </Link>
+            {!isStatusLoading && isRegistrationOpen && (
+              <Link href="/register">
+                <Button
+                  size="lg"
+                  className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold text-lg px-8 py-4 rounded-xl hover:shadow-2xl hover:scale-105 transition-all duration-300"
+                >
+                  Register Now
+                </Button>
+              </Link>
+            )}
+            
+            {!isStatusLoading && !isRegistrationOpen && (
+              <div className="space-y-4">
+                <div 
+                  className="flex items-center justify-center gap-3 text-red-400 bg-red-900/20 px-6 py-3 rounded-xl border border-red-500/30 cursor-pointer hover:bg-red-900/30 transition-colors"
+                  onClick={() => {
+                    // Show registration closed modal
+                    const modal = document.createElement('div');
+                    modal.innerHTML = `
+                      <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+                        <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 relative">
+                          <div class="flex justify-center mb-4">
+                            <div class="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center">
+                              <svg class="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
+                              </svg>
+                            </div>
+                          </div>
+                          <h2 class="text-2xl font-bold text-center text-gray-900 mb-4">Registration Closed</h2>
+                          <p class="text-gray-600 text-center mb-6">${status?.message || 'Registration for Sairam MUN 2025 is currently closed. Please check back later for updates or contact the organizers for more information.'}</p>
+                          <div class="flex flex-col space-y-3">
+                            <button onclick="this.closest('.fixed').remove()" class="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-medium py-3 rounded-xl transition-all duration-200 hover:shadow-lg">Got it</button>
+                          </div>
+                        </div>
+                      </div>
+                    `;
+                    document.body.appendChild(modal);
+                  }}
+                >
+                  <AlertCircle size={24} />
+                  <span className="text-lg font-medium">Registration Closed</span>
+                </div>
+                {status?.message && (
+                  <p className="text-slate-300 max-w-md mx-auto">
+                    {status.message}
+                  </p>
+                )}
+              </div>
+            )}
+            
+            {isStatusLoading && (
+              <div className="flex items-center justify-center gap-3 text-slate-300">
+                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-500"></div>
+                <span>Checking registration status...</span>
+              </div>
+            )}
           </div>
           
           {/* Countdown Timer */}

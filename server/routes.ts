@@ -132,28 +132,75 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       });
     } catch (error) {
-      console.error('❌ Registration error details:', {
-        error: error,
-        errorMessage: error instanceof Error ? error.message : 'Unknown error',
-        errorStack: error instanceof Error ? error.stack : 'No stack trace',
-        errorName: error instanceof Error ? error.name : 'Unknown error type'
-      });
-
-      if (error instanceof z.ZodError) {
-        console.error('❌ Validation error:', error.errors);
-        res.status(400).json({ 
-          success: false, 
-          message: "Validation error", 
-          errors: error.errors 
+      console.error('❌ Registration error:', error);
+      
+      // Check if it's a registration closed error
+      if (error instanceof Error && error.message === 'Registration is currently closed') {
+        res.status(403).json({
+          success: false,
+          message: 'Registration is currently closed',
+          error: 'REGISTRATION_CLOSED'
         });
-      } else {
-        console.error('❌ Internal server error:', error);
-        res.status(500).json({ 
-          success: false, 
-          message: "Internal server error",
-          error: process.env.NODE_ENV === 'development' ? error.message : undefined
-        });
+        return;
       }
+      
+      res.status(500).json({
+        success: false,
+        message: "Failed to create registration",
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+
+  // Get registration status endpoint
+  app.get("/api/registration-status", async (req, res) => {
+    try {
+      const status = await mongoStorage.getRegistrationStatus();
+      res.json({
+        success: true,
+        status
+      });
+    } catch (error) {
+      console.error('❌ Error getting registration status:', error);
+      res.status(500).json({
+        success: false,
+        message: "Failed to get registration status",
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+
+  // Update registration status endpoint (admin only)
+  app.post("/api/registration-status", async (req, res) => {
+    try {
+      // Basic admin check - you might want to enhance this with proper authentication
+      const { isOpen, message } = req.body;
+      
+      if (typeof isOpen !== 'boolean') {
+        res.status(400).json({
+          success: false,
+          message: "isOpen must be a boolean"
+        });
+        return;
+      }
+      
+      const status = await mongoStorage.updateRegistrationStatus({
+        isOpen,
+        message: message || undefined
+      });
+      
+      res.json({
+        success: true,
+        message: `Registration ${isOpen ? 'opened' : 'closed'} successfully`,
+        status
+      });
+    } catch (error) {
+      console.error('❌ Error updating registration status:', error);
+      res.status(500).json({
+        success: false,
+        message: "Failed to update registration status",
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
     }
   });
 

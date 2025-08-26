@@ -24,9 +24,17 @@ export const insertRegistrationSchema = z.object({
   paymentScreenshot: z.string().optional(), // Base64 or URL of payment screenshot
 });
 
+// Registration status configuration schema
+export const registrationStatusSchema = z.object({
+  isOpen: z.boolean(),
+  message: z.string().optional(),
+  closedAt: z.date().optional(),
+});
+
 // Type definitions
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type InsertRegistration = z.infer<typeof insertRegistrationSchema>;
+export type RegistrationStatus = z.infer<typeof registrationStatusSchema>;
 
 // MongoDB Registration interface (for Mongoose)
 export interface IRegistration {

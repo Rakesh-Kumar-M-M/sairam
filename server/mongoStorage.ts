@@ -1,5 +1,6 @@
-import { Registration, IRegistrationDocument } from './models/Registration';
-import { type InsertRegistration, type IRegistration } from '@shared/schema';
+import { Registration } from "./models/Registration";
+import { RegistrationStatusModel } from "./models/RegistrationStatus";
+import { IRegistration, InsertRegistration, RegistrationStatus } from "@shared/schema";
 
 export interface IMongoStorage {
   createRegistration(registration: InsertRegistration): Promise<IRegistration>;
@@ -19,11 +20,19 @@ export interface IMongoStorage {
     revenue: number;
   }>;
   migrateCommitteeField(): Promise<{ updatedCount: number; totalCount: number }>;
+  getRegistrationStatus(): Promise<RegistrationStatus>;
+  updateRegistrationStatus(status: Partial<RegistrationStatus>): Promise<RegistrationStatus>;
 }
 
 export class MongoStorage implements IMongoStorage {
   async createRegistration(registrationData: InsertRegistration): Promise<IRegistration> {
     try {
+      // Check if registration is open before allowing creation
+      const status = await this.getRegistrationStatus();
+      if (!status.isOpen) {
+        throw new Error('Registration is currently closed');
+      }
+
       console.log('📝 Creating registration with data:', registrationData);
       
       // Extract payment screenshot and determine payment status
@@ -206,6 +215,73 @@ export class MongoStorage implements IMongoStorage {
       return { updatedCount: result.modifiedCount, totalCount };
     } catch (error) {
       console.error('❌ Error migrating committee field:', error);
+      throw error;
+    }
+  }
+
+  async getRegistrationStatus(): Promise<RegistrationStatus> {
+    try {
+      let status = await RegistrationStatusModel.findOne();
+      
+      if (!status) {
+        // Create default status if none exists
+        status = await RegistrationStatusModel.create({
+          isOpen: true,
+          message: null,
+          closedAt: null
+        });
+      }
+      
+      return {
+        isOpen: status.isOpen,
+        message: status.message || undefined,
+        closedAt: status.closedAt || undefined
+      };
+    } catch (error) {
+      console.error('❌ Error getting registration status:', error);
+      // Return default open status if there's an error
+      return {
+        isOpen: true,
+        message: undefined,
+        closedAt: undefined
+      };
+    }
+  }
+
+  async updateRegistrationStatus(status: Partial<RegistrationStatus>): Promise<RegistrationStatus> {
+    try {
+      let currentStatus = await RegistrationStatusModel.findOne();
+      
+      if (!currentStatus) {
+        // Create new status if none exists
+        currentStatus = await RegistrationStatusModel.create({
+          isOpen: true,
+          message: null,
+          closedAt: null
+        });
+      }
+      
+      // Update the status
+      const updatedStatus = await RegistrationStatusModel.findByIdAndUpdate(
+        currentStatus._id,
+        {
+          ...status,
+          closedAt: status.isOpen === false ? new Date() : undefined
+        },
+        { new: true }
+      );
+      
+      if (!updatedStatus) {
+        throw new Error('Failed to update registration status');
+      }
+      
+      return {
+        isOpen: updatedStatus.isOpen,
+        message: updatedStatus.message || undefined,
+        closedAt: updatedStatus.closedAt || undefined
+      };
+    } catch (error) {
+      console.error('❌ Error updating registration status:', error);
       throw error;
     }
   }
